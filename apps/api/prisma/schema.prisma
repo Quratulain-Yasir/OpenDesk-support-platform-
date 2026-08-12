@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  avatar    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  memberships Membership[]
+  tickets     Ticket[]     @relation("AgentTickets")
+  messages    Message[]
+  activities  Activity[]
+  savedResponses SavedResponse[]
+
+  @@map("users")
+}
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  memberships    Membership[]
+  tickets        Ticket[]
+  savedResponses SavedResponse[]
+  activities     Activity[]
+
+  @@map("workspaces")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  AGENT
+}
+
+model Membership {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  workspaceId String    @map("workspace_id")
+  role        Role      @default(AGENT)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+  @@map("memberships")
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING
+  RESOLVED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Ticket {
+  id            String         @id @default(cuid())
+  workspaceId   String         @map("workspace_id")
+  subject       String
+  description   String
+  status        TicketStatus   @default(OPEN)
+  priority      TicketPriority @default(MEDIUM)
+  customerEmail String         @map("customer_email")
+  customerName  String?        @map("customer_name")
+  publicToken   String         @unique @default(cuid()) @map("public_token")
+  assigneeId    String?        @map("assignee_id")
+  firstReplyAt  DateTime?      @map("first_reply_at")
+  resolvedAt    DateTime?      @map("resolved_at")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  workspace Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  assignee  User?      @relation("AgentTickets", fields: [assigneeId], references: [id], onDelete: SetNull)
+  messages  Message[]
+  activities Activity[]
+
+  @@map("tickets")
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  ticketId   String   @map("ticket_id")
+  workspaceId String  @map("workspace_id")
+  content    String
+  isInternal Boolean  @default(false) @map("is_internal")
+  authorId   String?  @map("author_id")
+  authorName String?  @map("author_name") // For public replies (customer name)
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  ticket    Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    User?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@map("messages")
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  ticketId    String   @map("ticket_id")
+  actorId     String?  @map("actor_id")
+  action      String   // e.g., "status_changed", "assigned", "replied", "note_added"
+  metadata    Json?    // { from: "OPEN", to: "IN_PROGRESS" }
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  ticket    Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  actor     User?     @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@map("activities")
+}
+
+model SavedResponse {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  title       String
+  content     String
+  createdById String  @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@map("saved_responses")
+}
+
+model Invite {
+  id          String    @id @default(cuid())
+  workspaceId String    @map("workspace_id")
+  email       String
+  role        Role      @default(AGENT)
+  token       String    @unique @default(cuid())
+  expiresAt   DateTime  @map("expires_at")
+  usedAt      DateTime? @map("used_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@map("invites")
+}
