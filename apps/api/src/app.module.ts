@@ -3,6 +3,10 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { WorkspacesModule } from './workspaces/workspaces.module';
+import { TicketsModule } from './tickets/tickets.module';
+import { ActivityModule } from './activity/activity.module';
+import { MessagesModule } from './messages/messages.module';
+import { PublicModule } from './public/public.module';
 
 @Module({
   imports: [
@@ -10,6 +14,10 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
     PrismaModule,
     AuthModule,
     WorkspacesModule,
+    ActivityModule,
+    TicketsModule,
+    MessagesModule,
+    PublicModule,
   ],
 })
 export class AppModule {}
