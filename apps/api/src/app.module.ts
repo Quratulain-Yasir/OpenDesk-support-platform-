@@ -7,6 +7,7 @@ import { TicketsModule } from './tickets/tickets.module';
 import { ActivityModule } from './activity/activity.module';
 import { MessagesModule } from './messages/messages.module';
 import { PublicModule } from './public/public.module';
+import { SavedResponsesModule } from './saved-responses/saved-responses.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { PublicModule } from './public/public.module';
     TicketsModule,
     MessagesModule,
     PublicModule,
+    SavedResponsesModule,
   ],
 })
 export class AppModule {}

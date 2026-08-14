@@ -8,6 +8,13 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { ArrowLeft, Send } from "lucide-react"
 
 interface Message {
@@ -26,6 +33,13 @@ interface Activity {
   metadata: Record<string, any>
   actor: { name: string } | null
   createdAt: string
+}
+
+interface SavedResponse {
+  id: string
+  title: string
+  content: string
+  category: string | null
 }
 
 interface TicketDetail {
@@ -60,11 +74,15 @@ export default function TicketDetailPage() {
   const [activeTab, setActiveTab] = useState<"reply" | "note">("reply")
   const [message, setMessage] = useState("")
   const [sending, setSending] = useState(false)
+  const [savedResponses, setSavedResponses] = useState<SavedResponse[]>([])
 
   useEffect(() => {
     const stored = localStorage.getItem("workspaceId") || ""
     setWorkspaceId(stored)
-    if (stored) loadTicket(stored)
+    if (stored) {
+      loadTicket(stored)
+      loadSavedResponses(stored)
+    }
   }, [])
 
   async function loadTicket(wsId: string) {
@@ -75,6 +93,15 @@ export default function TicketDetailPage() {
       setTicket(null)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function loadSavedResponses(wsId: string) {
+    try {
+      const data = await api(`/workspaces/${wsId}/saved-responses`)
+      setSavedResponses(data)
+    } catch {
+      setSavedResponses([])
     }
   }
 
@@ -199,6 +226,28 @@ export default function TicketDetailPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSend} className="space-y-3">
+                {/* Saved Response Picker */}
+                {savedResponses.length > 0 && (
+                  <Select
+                    onValueChange={(val) => {
+                      const found = savedResponses.find((r) => r.id === val)
+                      if (found) setMessage(found.content)
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Insert saved response..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {savedResponses.map((r) => (
+                        <SelectItem key={r.id} value={r.id}>
+                          {r.title}
+                          {r.category ? ` (${r.category})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
                 <Textarea
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
