@@ -75,6 +75,7 @@ export default function TicketDetailPage() {
   const [message, setMessage] = useState("")
   const [sending, setSending] = useState(false)
   const [savedResponses, setSavedResponses] = useState<SavedResponse[]>([])
+  const [selectedResponseId, setSelectedResponseId] = useState("")
 
   useEffect(() => {
     const stored = localStorage.getItem("workspaceId") || ""
@@ -119,6 +120,7 @@ export default function TicketDetailPage() {
         }),
       })
       setMessage("")
+      setSelectedResponseId("")
       await loadTicket(workspaceId)
     } catch {
       alert("Failed to send")
@@ -131,18 +133,18 @@ export default function TicketDetailPage() {
   if (!ticket) return <div className="p-6">Ticket not found.</div>
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="mx-auto max-w-5xl p-6">
       {/* Back link */}
       <Link
         href="/dashboard/tickets"
-        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
+        className="mb-6 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to tickets
+        <ArrowLeft className="h-4 w-4" /> Back to tickets
       </Link>
 
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
+        <div className="mb-2 flex items-center gap-3">
           <h1 className="text-2xl font-bold">{ticket.subject}</h1>
           <Badge className={PRIORITY_COLORS[ticket.priority] || ""}>
             {ticket.priority}
@@ -155,9 +157,9 @@ export default function TicketDetailPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* LEFT: Conversation */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6 lg:col-span-2">
           {/* Description (first message) */}
           <Card>
             <CardContent className="p-4">
@@ -174,15 +176,15 @@ export default function TicketDetailPage() {
               return (
                 <div
                   key={msg.id}
-                  className={`p-4 border ${
+                  className={`border p-4 ${
                     isNote
-                      ? "bg-amber-50 border-amber-200"
+                      ? "border-amber-200 bg-amber-50"
                       : isCustomer
-                      ? "bg-muted/50"
-                      : "bg-background"
+                        ? "bg-muted/50"
+                        : "bg-background"
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="mb-2 flex items-center justify-between">
                     <span className="text-sm font-semibold">
                       {isNote
                         ? "Internal Note"
@@ -228,24 +230,35 @@ export default function TicketDetailPage() {
               <form onSubmit={handleSend} className="space-y-3">
                 {/* Saved Response Picker */}
                 {savedResponses.length > 0 && (
-                  <Select
-                    onValueChange={(val) => {
-                      const found = savedResponses.find((r) => r.id === val)
-                      if (found) setMessage(found.content)
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Insert saved response..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {savedResponses.map((r) => (
-                        <SelectItem key={r.id} value={r.id}>
-                          {r.title}
-                          {r.category ? ` (${r.category})` : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="mb-2">
+                    <Select
+                      value={selectedResponseId}
+                      onValueChange={(val) => {
+                        if (val === "none") {
+                          setSelectedResponseId("")
+                          return
+                        }
+                        const found = savedResponses.find((r) => r.id === val)
+                        if (found) {
+                          setMessage(found.content)
+                          setSelectedResponseId(val)
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Insert saved response..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— Type manually —</SelectItem>
+                        {savedResponses.map((r) => (
+                          <SelectItem key={r.id} value={r.id}>
+                            {r.title}
+                            {r.category ? ` (${r.category})` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 )}
 
                 <Textarea
@@ -261,12 +274,12 @@ export default function TicketDetailPage() {
                 />
                 <div className="flex justify-end">
                   <Button type="submit" disabled={sending} className="gap-2">
-                    <Send className="w-4 h-4" />
+                    <Send className="h-4 w-4" />
                     {sending
                       ? "Sending..."
                       : activeTab === "reply"
-                      ? "Send Reply"
-                      : "Add Note"}
+                        ? "Send Reply"
+                        : "Add Note"}
                   </Button>
                 </div>
               </form>
@@ -322,10 +335,15 @@ export default function TicketDetailPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {ticket.activities.length === 0 ? (
-                <p className="text-xs text-muted-foreground">No activity yet.</p>
+                <p className="text-xs text-muted-foreground">
+                  No activity yet.
+                </p>
               ) : (
                 ticket.activities.map((act) => (
-                  <div key={act.id} className="text-xs border-l-2 border-muted pl-3 py-1">
+                  <div
+                    key={act.id}
+                    className="border-l-2 border-muted py-1 pl-3 text-xs"
+                  >
                     <p className="font-medium capitalize">
                       {act.action.replace(/_/g, " ")}
                     </p>
