@@ -69,7 +69,6 @@ export default function TicketDetailPage() {
   const params = useParams()
   const ticketId = params.id as string
 
-  // LAZY INITIALIZER: localStorage effect ke bahar se lo
   const [workspaceId, setWorkspaceId] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("workspaceId") || ""
@@ -85,19 +84,16 @@ export default function TicketDetailPage() {
   const [savedResponses, setSavedResponses] = useState<SavedResponse[]>([])
   const [selectedResponseId, setSelectedResponseId] = useState("")
 
-  const loadTicket = useCallback(
-    async (wsId: string) => {
-      try {
-        const data = await api(`/workspaces/${wsId}/tickets/${ticketId}`)
-        setTicket(data)
-      } catch {
-        setTicket(null)
-      } finally {
-        setLoading(false)
-      }
-    },
-    [ticketId]
-  )
+  const loadTicket = useCallback(async (wsId: string) => {
+    try {
+      const data = await api(`/workspaces/${wsId}/tickets/${ticketId}`)
+      setTicket(data)
+    } catch {
+      setTicket(null)
+    } finally {
+      setLoading(false)
+    }
+  }, [ticketId])
 
   const loadSavedResponses = useCallback(async (wsId: string) => {
     try {
@@ -131,7 +127,7 @@ export default function TicketDetailPage() {
         }),
       })
       setMessage("")
-      setSelectedResponseId("")
+      setSelectedResponseId("")  // Reset to placeholder after send
       await loadTicket(workspaceId)
     } catch {
       alert("Failed to send")
@@ -144,18 +140,18 @@ export default function TicketDetailPage() {
   if (!ticket) return <div className="p-6">Ticket not found.</div>
 
   return (
-    <div className="mx-auto max-w-5xl p-6">
+    <div className="p-6 max-w-5xl mx-auto">
       {/* Back link */}
       <Link
         href="/dashboard/tickets"
-        className="mb-6 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+        className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
       >
-        <ArrowLeft className="h-4 w-4" /> Back to tickets
+        <ArrowLeft className="w-4 h-4" /> Back to tickets
       </Link>
 
       {/* Header */}
       <div className="mb-6">
-        <div className="mb-2 flex items-center gap-3">
+        <div className="flex items-center gap-3 mb-2">
           <h1 className="text-2xl font-bold">{ticket.subject}</h1>
           <Badge className={PRIORITY_COLORS[ticket.priority] || ""}>
             {ticket.priority}
@@ -168,9 +164,9 @@ export default function TicketDetailPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* LEFT: Conversation */}
-        <div className="space-y-6 lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           {/* Description (first message) */}
           <Card>
             <CardContent className="p-4">
@@ -187,15 +183,15 @@ export default function TicketDetailPage() {
               return (
                 <div
                   key={msg.id}
-                  className={`border p-4 ${
+                  className={`p-4 border ${
                     isNote
-                      ? "border-amber-200 bg-amber-50"
+                      ? "bg-amber-50 border-amber-200"
                       : isCustomer
-                        ? "bg-muted/50"
-                        : "bg-background"
+                      ? "bg-muted/50"
+                      : "bg-background"
                   }`}
                 >
-                  <div className="mb-2 flex items-center justify-between">
+                  <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-semibold">
                       {isNote
                         ? "Internal Note"
@@ -247,12 +243,11 @@ export default function TicketDetailPage() {
                       onValueChange={(val) => {
                         const safeVal = val || ""
                         if (safeVal === "none") {
-                          setSelectedResponseId("")
+                          setSelectedResponseId("none")  // ← "none" rakho taake dropdown mein dikhe
+                          setMessage("")
                           return
                         }
-                        const found = savedResponses.find(
-                          (r) => r.id === safeVal
-                        )
+                        const found = savedResponses.find((r) => r.id === safeVal)
                         if (found) {
                           setMessage(found.content)
                           setSelectedResponseId(safeVal)
@@ -288,12 +283,12 @@ export default function TicketDetailPage() {
                 />
                 <div className="flex justify-end">
                   <Button type="submit" disabled={sending} className="gap-2">
-                    <Send className="h-4 w-4" />
+                    <Send className="w-4 h-4" />
                     {sending
                       ? "Sending..."
                       : activeTab === "reply"
-                        ? "Send Reply"
-                        : "Add Note"}
+                      ? "Send Reply"
+                      : "Add Note"}
                   </Button>
                 </div>
               </form>
@@ -349,15 +344,10 @@ export default function TicketDetailPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {ticket.activities.length === 0 ? (
-                <p className="text-xs text-muted-foreground">
-                  No activity yet.
-                </p>
+                <p className="text-xs text-muted-foreground">No activity yet.</p>
               ) : (
                 ticket.activities.map((act) => (
-                  <div
-                    key={act.id}
-                    className="border-l-2 border-muted py-1 pl-3 text-xs"
-                  >
+                  <div key={act.id} className="text-xs border-l-2 border-muted pl-3 py-1">
                     <p className="font-medium capitalize">
                       {act.action.replace(/_/g, " ")}
                     </p>

@@ -8,6 +8,7 @@ import { ActivityModule } from './activity/activity.module';
 import { MessagesModule } from './messages/messages.module';
 import { PublicModule } from './public/public.module';
 import { SavedResponsesModule } from './saved-responses/saved-responses.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { SavedResponsesModule } from './saved-responses/saved-responses.module';
     MessagesModule,
     PublicModule,
     SavedResponsesModule,
+    AnalyticsModule,
   ],
 })
 export class AppModule {}
