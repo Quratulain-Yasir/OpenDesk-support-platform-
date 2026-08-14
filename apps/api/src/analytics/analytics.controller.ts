@@ -37,7 +37,8 @@ export class AnalyticsController {
     let avgResponseTime = 0;
     if (ticketsWithReply.length > 0) {
       const totalMinutes = ticketsWithReply.reduce((sum, t) => {
-        const diff = new Date(t.firstReplyAt!).getTime() - new Date(t.createdAt).getTime();
+        const diff =
+          new Date(t.firstReplyAt!).getTime() - new Date(t.createdAt).getTime();
         return sum + diff / (1000 * 60);
       }, 0);
       avgResponseTime = Math.round(totalMinutes / ticketsWithReply.length);
@@ -50,9 +51,13 @@ export class AnalyticsController {
       _count: { id: true },
     });
 
+    const assigneeIds = ticketsPerAgent
+      .map((t) => t.assigneeId)
+      .filter((id): id is string => id !== null);
+
     const agents = await this.prisma.user.findMany({
       where: {
-        id: { in: ticketsPerAgent.map((t) => t.assigneeId).filter(Boolean) },
+        id: { in: assigneeIds },
       },
       select: { id: true, name: true },
     });
