@@ -1,4 +1,5 @@
 import { Controller, Get, Patch, Delete, Param, Body, UseGuards, Request, ForbiddenException } from '@nestjs/common';
+import { Role } from '@prisma/client';  // ← YE IMPORT ADD KARO
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { WorkspaceMemberGuard } from '../auth/guards/workspace-member.guard';
@@ -20,8 +21,8 @@ export class TeamController {
   async updateRole(
     @Param('workspaceId') wsId: string,
     @Param('membershipId') id: string,
-    @Body('role') role: string,
-    @Request() req: any,
+    @Body('role') role: Role,  // ← string ki jagah Role enum
+    @Request() req: { user?: { userId?: string; id?: string } },
   ) {
     const userId = req.user?.userId || req.user?.id;
     const myMembership = await this.prisma.membership.findFirst({
@@ -32,7 +33,7 @@ export class TeamController {
     }
     return this.prisma.membership.update({
       where: { id },
-      data: { role },
+      data: { role },  // ← Ab type match hogi
     });
   }
 
@@ -40,7 +41,7 @@ export class TeamController {
   async remove(
     @Param('workspaceId') wsId: string,
     @Param('membershipId') id: string,
-    @Request() req: any,
+    @Request() req: { user?: { userId?: string; id?: string } },
   ) {
     const userId = req.user?.userId || req.user?.id;
     const myMembership = await this.prisma.membership.findFirst({
