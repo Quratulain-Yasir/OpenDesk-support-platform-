@@ -77,7 +77,7 @@ export default function TeamPage() {
                 <Badge variant={m.role === "OWNER" ? "default" : "secondary"}>{m.role}</Badge>
                 {canManage && m.role !== "OWNER" && (
                   <>
-                    <Select defaultValue={m.role} onValueChange={(v) => changeRole(m.id, v)}>
+                    <Select defaultValue={m.role} onValueChange={(v) => v && changeRole(m.id, v)}>
                       <SelectTrigger className="w-28 h-8 text-xs">
                         <SelectValue />
                       </SelectTrigger>
