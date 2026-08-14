@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSavedResponseDto } from './dto/create-saved-response.dto';
 
@@ -16,32 +16,19 @@ export class SavedResponsesService {
 
   async create(workspaceId: string, userId: string, dto: CreateSavedResponseDto) {
     return this.prisma.savedResponse.create({
-      data: {
-        ...dto,
-        workspaceId,
-        createdById: userId,
-      },
+      data: { ...dto, workspaceId, createdById: userId },
     });
   }
 
-  async update(workspaceId: string, id: string, userId: string, dto: CreateSavedResponseDto) {
-    const existing = await this.prisma.savedResponse.findFirst({
-      where: { id, workspaceId },
-    });
-    if (!existing) throw new NotFoundException('Saved response not found');
-    
-    return this.prisma.savedResponse.update({
-      where: { id },
-      data: { ...dto },
-    });
+  async update(workspaceId: string, id: string, dto: CreateSavedResponseDto) {
+    const existing = await this.prisma.savedResponse.findFirst({ where: { id, workspaceId } });
+    if (!existing) throw new NotFoundException('Not found');
+    return this.prisma.savedResponse.update({ where: { id }, data: dto });
   }
 
   async delete(workspaceId: string, id: string) {
-    const existing = await this.prisma.savedResponse.findFirst({
-      where: { id, workspaceId },
-    });
-    if (!existing) throw new NotFoundException('Saved response not found');
-    
+    const existing = await this.prisma.savedResponse.findFirst({ where: { id, workspaceId } });
+    if (!existing) throw new NotFoundException('Not found');
     await this.prisma.savedResponse.delete({ where: { id } });
   }
 }

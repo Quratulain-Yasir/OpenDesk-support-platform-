@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Body,
-  Param,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { SavedResponsesService } from './saved-responses.service';
 import { CreateSavedResponseDto } from './dto/create-saved-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -19,31 +9,19 @@ import { WorkspaceMemberGuard } from '../workspaces/guards/workspace-member.guar
 export class SavedResponsesController {
   constructor(private service: SavedResponsesService) {}
 
-  @Get()
-  findAll(@Param('workspaceId') workspaceId: string) {
-    return this.service.findAll(workspaceId);
+  @Get() findAll(@Param('workspaceId') wsId: string) {
+    return this.service.findAll(wsId);
   }
 
-  @Post()
-  create(
-    @Param('workspaceId') workspaceId: string,
-    @Request() req,
-    @Body() dto: CreateSavedResponseDto,
-  ) {
-    return this.service.create(workspaceId, req.user.userId, dto);
+  @Post() create(@Param('workspaceId') wsId: string, @Request() req, @Body() dto: CreateSavedResponseDto) {
+    return this.service.create(wsId, req.user.userId, dto);
   }
 
-  @Patch(':id')
-  update(
-    @Param('workspaceId') workspaceId: string,
-    @Param('id') id: string,
-    @Body() dto: CreateSavedResponseDto,
-  ) {
-    return this.service.update(workspaceId, id, req.user.userId, dto);
+  @Patch(':id') update(@Param('workspaceId') wsId: string, @Param('id') id: string, @Body() dto: CreateSavedResponseDto) {
+    return this.service.update(wsId, id, dto);
   }
 
-  @Delete(':id')
-  delete(@Param('workspaceId') workspaceId: string, @Param('id') id: string) {
-    return this.service.delete(workspaceId, id);
+  @Delete(':id') delete(@Param('workspaceId') wsId: string, @Param('id') id: string) {
+    return this.service.delete(wsId, id);
   }
 }
