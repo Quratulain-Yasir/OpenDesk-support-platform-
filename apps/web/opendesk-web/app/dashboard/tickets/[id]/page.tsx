@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams } from "next/navigation"
 import Link from "next/link"
 import { api } from "@/lib/api"
@@ -68,7 +68,15 @@ const PRIORITY_COLORS: Record<string, string> = {
 export default function TicketDetailPage() {
   const params = useParams()
   const ticketId = params.id as string
-  const [workspaceId, setWorkspaceId] = useState("")
+
+  // LAZY INITIALIZER: localStorage effect ke bahar se lo
+  const [workspaceId, setWorkspaceId] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("workspaceId") || ""
+    }
+    return ""
+  })
+
   const [ticket, setTicket] = useState<TicketDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<"reply" | "note">("reply")
@@ -77,34 +85,37 @@ export default function TicketDetailPage() {
   const [savedResponses, setSavedResponses] = useState<SavedResponse[]>([])
   const [selectedResponseId, setSelectedResponseId] = useState("")
 
-  useEffect(() => {
-    const stored = localStorage.getItem("workspaceId") || ""
-    setWorkspaceId(stored)
-    if (stored) {
-      loadTicket(stored)
-      loadSavedResponses(stored)
-    }
-  }, [])
+  const loadTicket = useCallback(
+    async (wsId: string) => {
+      try {
+        const data = await api(`/workspaces/${wsId}/tickets/${ticketId}`)
+        setTicket(data)
+      } catch {
+        setTicket(null)
+      } finally {
+        setLoading(false)
+      }
+    },
+    [ticketId]
+  )
 
-  async function loadTicket(wsId: string) {
-    try {
-      const data = await api(`/workspaces/${wsId}/tickets/${ticketId}`)
-      setTicket(data)
-    } catch {
-      setTicket(null)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function loadSavedResponses(wsId: string) {
+  const loadSavedResponses = useCallback(async (wsId: string) => {
     try {
       const data = await api(`/workspaces/${wsId}/saved-responses`)
       setSavedResponses(data)
     } catch {
       setSavedResponses([])
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (workspaceId) {
+      loadTicket(workspaceId)
+      loadSavedResponses(workspaceId)
+    } else {
+      setLoading(false)
+    }
+  }, [workspaceId, loadTicket, loadSavedResponses])
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault()
@@ -234,14 +245,17 @@ export default function TicketDetailPage() {
                     <Select
                       value={selectedResponseId}
                       onValueChange={(val) => {
-                        if (val === "none") {
+                        const safeVal = val || ""
+                        if (safeVal === "none") {
                           setSelectedResponseId("")
                           return
                         }
-                        const found = savedResponses.find((r) => r.id === val)
+                        const found = savedResponses.find(
+                          (r) => r.id === safeVal
+                        )
                         if (found) {
                           setMessage(found.content)
-                          setSelectedResponseId(val)
+                          setSelectedResponseId(safeVal)
                         }
                       }}
                     >
