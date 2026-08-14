@@ -153,19 +153,24 @@ export default function TicketsPage() {
               </div>
               <div className="min-h-[200px] space-y-3 p-3">
                 {colTickets.length === 0 && (
-                  <p className="text-center text-xs text-muted-foreground py-8">
+                  <p className="py-8 text-center text-xs text-muted-foreground">
                     No tickets
                   </p>
                 )}
                 {colTickets.map((ticket) => (
-                  <Link
+                  <div
                     key={ticket.id}
-                    href={`/dashboard/tickets/${ticket.id}`}
-                    className="block"
+                    className="border bg-background transition-shadow hover:shadow-sm"
                   >
-                    <div className="border bg-background p-3 transition-shadow hover:shadow-sm cursor-pointer">
+                    {/* Clickable area — Link sirf yahan tak */}
+                    <Link
+                      href={`/dashboard/tickets/${ticket.id}`}
+                      className="block p-3 pb-0"
+                    >
                       <div className="mb-2 flex items-start justify-between">
-                        <Badge className={PRIORITY_COLORS[ticket.priority] || ""}>
+                        <Badge
+                          className={PRIORITY_COLORS[ticket.priority] || ""}
+                        >
                           {ticket.priority}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
@@ -178,29 +183,31 @@ export default function TicketsPage() {
                       <p className="mb-3 text-xs text-muted-foreground">
                         {ticket.customerName || ticket.customerEmail}
                       </p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-muted-foreground">
-                          {ticket.assignee?.name || "Unassigned"}
-                        </span>
-                        <Select
-                          defaultValue={ticket.status}
-                          onValueChange={(val) => updateStatus(ticket.id, val)}
-                        >
-                          <SelectTrigger className="h-7 w-28 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="OPEN">Open</SelectItem>
-                            <SelectItem value="IN_PROGRESS">
-                              In Progress
-                            </SelectItem>
-                            <SelectItem value="WAITING">Waiting</SelectItem>
-                            <SelectItem value="RESOLVED">Resolved</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    </Link>
+
+                    {/* Non-clickable area — Link ke bahar */}
+                    <div className="flex items-center justify-between border-t bg-muted/30 px-3 py-2">
+                      <span className="text-xs text-muted-foreground">
+                        {ticket.assignee?.name || "Unassigned"}
+                      </span>
+                      <Select
+                        defaultValue={ticket.status}
+                        onValueChange={(val) => val && updateStatus(ticket.id, val)}
+                      >
+                        <SelectTrigger className="h-7 w-28 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="OPEN">Open</SelectItem>
+                          <SelectItem value="IN_PROGRESS">
+                            In Progress
+                          </SelectItem>
+                          <SelectItem value="WAITING">Waiting</SelectItem>
+                          <SelectItem value="RESOLVED">Resolved</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                  </Link>
+                  </div>
                 ))}
               </div>
             </div>
