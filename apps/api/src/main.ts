@@ -9,16 +9,18 @@ async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
 
-  // Multiple origins allow karo — localhost + deployed frontend
-  const frontendUrl =
-    (configService.get('FRONTEND_URL') as string) || 'http://localhost:3000';
-  const allowedOrigins = [
-    'http://localhost:3000',
-    ...frontendUrl
-      .split(',')
-      .map((url) => url.trim())
-      .filter(Boolean),
-  ];
+  // CORS: localhost + deployed frontend dono allow karo
+  const frontendUrl = (configService.get('FRONTEND_URL') as string) || '';
+
+  const allowedOrigins = ['http://localhost:3000'];
+
+  if (frontendUrl) {
+    // Remove trailing slash agar ho toh
+    const cleanUrl = frontendUrl.replace(/\/$/, '');
+    if (!allowedOrigins.includes(cleanUrl)) {
+      allowedOrigins.push(cleanUrl);
+    }
+  }
 
   app.enableCors({
     origin: allowedOrigins,
