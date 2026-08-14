@@ -12,7 +12,7 @@ import {
 import { SavedResponsesService } from './saved-responses.service';
 import { CreateSavedResponseDto } from './dto/create-saved-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { WorkspaceMemberGuard } from '../workspaces/guards/workspace-member.guard';
+import { WorkspaceMemberGuard } from '../auth/guards/workspace-member.guard';
 
 interface ReqWithUser {
   user?: { userId?: string; id?: string; sub?: string };
