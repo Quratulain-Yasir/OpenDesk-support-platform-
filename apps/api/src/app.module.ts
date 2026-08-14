@@ -9,7 +9,7 @@ import { MessagesModule } from './messages/messages.module';
 import { PublicModule } from './public/public.module';
 import { SavedResponsesModule } from './saved-responses/saved-responses.module';
 import { AnalyticsModule } from './analytics/analytics.module';
-
+import { TeamModule } from './team/team.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -22,6 +22,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     PublicModule,
     SavedResponsesModule,
     AnalyticsModule,
+    TeamModule,
   ],
 })
 export class AppModule {}
