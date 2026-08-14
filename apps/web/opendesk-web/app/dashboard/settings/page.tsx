@@ -9,6 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/lib/auth-context"
 import { User } from "lucide-react"
 
+// Extend user type locally for avatar
+interface UserWithAvatar {
+  name?: string
+  email?: string
+  avatar?: string
+}
+
 export default function SettingsPage() {
   const router = useRouter()
   const { user, setUser } = useAuth()
@@ -26,8 +33,9 @@ export default function SettingsPage() {
     setWsId(id)
     if (id) loadWorkspace(id)
     if (user) {
-      setProfile({ name: user.name || "", email: user.email || "" })
-      setAvatarPreview(user.avatar || "")
+      const u = user as UserWithAvatar
+      setProfile({ name: u.name || "", email: u.email || "" })
+      setAvatarPreview(u.avatar || "")
     }
   }, [user])
 
@@ -55,7 +63,9 @@ export default function SettingsPage() {
     try {
       const body: any = { name: profile.name }
       if (password) body.password = password
-      if (avatarPreview && avatarPreview !== user?.avatar) body.avatar = avatarPreview
+      const currentAvatar = (user as UserWithAvatar)?.avatar
+      if (avatarPreview && avatarPreview !== currentAvatar)
+        body.avatar = avatarPreview
 
       const res = await api("/auth/me", {
         method: "PATCH",
@@ -90,7 +100,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6 p-6">
       <h1 className="text-2xl font-bold">Settings</h1>
 
       {/* Profile */}
@@ -103,13 +113,17 @@ export default function SettingsPage() {
             {/* Avatar */}
             <div className="flex items-center gap-4">
               <div
-                className="w-16 h-16 rounded-full bg-muted flex items-center justify-center overflow-hidden cursor-pointer border"
+                className="flex h-16 w-16 cursor-pointer items-center justify-center overflow-hidden rounded-full border bg-muted"
                 onClick={() => fileRef.current?.click()}
               >
                 {avatarPreview ? (
-                  <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
+                  <img
+                    src={avatarPreview}
+                    alt="avatar"
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
-                  <User className="w-8 h-8 text-muted-foreground" />
+                  <User className="h-8 w-8 text-muted-foreground" />
                 )}
               </div>
               <div>
@@ -120,27 +134,49 @@ export default function SettingsPage() {
                   className="hidden"
                   onChange={handleAvatarChange}
                 />
-                <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileRef.current?.click()}
+                >
                   Change Avatar
                 </Button>
-                <p className="text-xs text-muted-foreground mt-1">Click to upload (max 2MB)</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Click to upload (max 2MB)
+                </p>
               </div>
             </div>
 
             <div>
               <label className="text-sm font-medium">Name</label>
-              <Input value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} required />
+              <Input
+                value={profile.name}
+                onChange={(e) =>
+                  setProfile({ ...profile, name: e.target.value })
+                }
+                required
+              />
             </div>
             <div>
               <label className="text-sm font-medium">Email</label>
               <Input value={profile.email} disabled className="bg-muted" />
-              <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Email cannot be changed
+              </p>
             </div>
             <div>
               <label className="text-sm font-medium">New Password</label>
-              <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Leave blank to keep current" />
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Leave blank to keep current"
+              />
             </div>
-            <Button type="submit" disabled={loading}>Update Profile</Button>
+            <Button type="submit" disabled={loading}>
+              Update Profile
+            </Button>
           </form>
         </CardContent>
       </Card>
@@ -154,19 +190,30 @@ export default function SettingsPage() {
           <form onSubmit={updateWorkspace} className="space-y-4">
             <div>
               <label className="text-sm font-medium">Workspace Name</label>
-              <Input value={workspaceName} onChange={(e) => setWorkspaceName(e.target.value)} required />
+              <Input
+                value={workspaceName}
+                onChange={(e) => setWorkspaceName(e.target.value)}
+                required
+              />
             </div>
-            <Button type="submit" disabled={loading}>Update Workspace</Button>
+            <Button type="submit" disabled={loading}>
+              Update Workspace
+            </Button>
           </form>
         </CardContent>
       </Card>
 
       {/* Saved Responses Link */}
-      <Card className="cursor-pointer hover:bg-muted/50" onClick={() => router.push("/dashboard/settings/saved-responses")}>
-        <CardContent className="p-4 flex items-center justify-between">
+      <Card
+        className="cursor-pointer hover:bg-muted/50"
+        onClick={() => router.push("/dashboard/settings/saved-responses")}
+      >
+        <CardContent className="flex items-center justify-between p-4">
           <div>
             <p className="font-medium">Saved Responses</p>
-            <p className="text-xs text-muted-foreground">Manage canned replies</p>
+            <p className="text-xs text-muted-foreground">
+              Manage canned replies
+            </p>
           </div>
           <span className="text-muted-foreground">→</span>
         </CardContent>
