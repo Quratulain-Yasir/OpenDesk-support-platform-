@@ -11,7 +11,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Pencil, Trash2, Plus } from "lucide-react"
 
@@ -27,6 +26,7 @@ export default function SavedResponsesPage() {
   const [responses, setResponses] = useState<SavedResponse[]>([])
   const [loading, setLoading] = useState(true)
   const [workspaceId, setWorkspaceId] = useState("")
+  const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<SavedResponse | null>(null)
   const [form, setForm] = useState({ title: "", content: "", category: "" })
 
@@ -47,6 +47,21 @@ export default function SavedResponsesPage() {
     }
   }
 
+  function openDialog(response?: SavedResponse) {
+    if (response) {
+      setEditing(response)
+      setForm({
+        title: response.title,
+        content: response.content,
+        category: response.category || "",
+      })
+    } else {
+      setEditing(null)
+      setForm({ title: "", content: "", category: "" })
+    }
+    setDialogOpen(true)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!workspaceId) return
@@ -63,8 +78,9 @@ export default function SavedResponsesPage() {
           body: JSON.stringify(form),
         })
       }
-      setForm({ title: "", content: "", category: "" })
+      setDialogOpen(false)
       setEditing(null)
+      setForm({ title: "", content: "", category: "" })
       loadResponses(workspaceId)
     } catch {
       alert("Failed to save")
@@ -86,64 +102,59 @@ export default function SavedResponsesPage() {
   if (loading) return <div className="p-6">Loading...</div>
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="p-6 max-w-3xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Saved Responses</h1>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" /> Add Response
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>
-                {editing ? "Edit" : "New"} Saved Response
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-              <div>
-                <label className="text-sm font-medium">Title</label>
-                <Input
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="e.g., Greeting"
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Category</label>
-                <Input
-                  value={form.category}
-                  onChange={(e) =>
-                    setForm({ ...form, category: e.target.value })
-                  }
-                  placeholder="e.g., Escalation"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Content</label>
-                <Textarea
-                  value={form.content}
-                  onChange={(e) =>
-                    setForm({ ...form, content: e.target.value })
-                  }
-                  rows={5}
-                  placeholder="Type the response template here..."
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full">
-                {editing ? "Update" : "Create"}
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Button className="gap-2" onClick={() => openDialog()}>
+          <Plus className="w-4 h-4" /> Add Response
+        </Button>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {editing ? "Edit" : "New"} Saved Response
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+            <div>
+              <label className="text-sm font-medium">Title</label>
+              <Input
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+                placeholder="e.g., Greeting"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Category</label>
+              <Input
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                placeholder="e.g., Escalation"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Content</label>
+              <Textarea
+                value={form.content}
+                onChange={(e) => setForm({ ...form, content: e.target.value })}
+                rows={5}
+                placeholder="Type the response template here..."
+                required
+              />
+            </div>
+            <Button type="submit" className="w-full">
+              {editing ? "Update" : "Create"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <div className="space-y-3">
         {responses.length === 0 && (
-          <p className="py-12 text-center text-muted-foreground">
+          <p className="text-muted-foreground text-center py-12">
             No saved responses yet.
           </p>
         )}
@@ -154,25 +165,18 @@ export default function SavedResponsesPage() {
                 <div>
                   <CardTitle className="text-base">{r.title}</CardTitle>
                   {r.category && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">
                       {r.category}
                     </span>
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1">
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => {
-                      setEditing(r)
-                      setForm({
-                        title: r.title,
-                        content: r.content,
-                        category: r.category || "",
-                      })
-                    }}
+                    onClick={() => openDialog(r)}
                   >
-                    <Pencil className="h-4 w-4" />
+                    <Pencil className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -180,13 +184,13 @@ export default function SavedResponsesPage() {
                     className="text-destructive"
                     onClick={() => handleDelete(r.id)}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-sm whitespace-pre-wrap text-muted-foreground">
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                 {r.content}
               </p>
             </CardContent>
