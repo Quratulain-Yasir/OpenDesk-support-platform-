@@ -76,7 +76,7 @@ export default function TicketsPage() {
       setWorkspaceId(stored)
       loadTickets(stored)
     } else {
-      api("/workspaces")
+      api<{ id: string }[]>("/workspaces")
         .then((workspaces) => {
           if (workspaces.length > 0) {
             const id = workspaces[0].id
