@@ -1,4 +1,8 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
@@ -9,13 +13,11 @@ export class WorkspacesService {
   constructor(private prisma: PrismaService) {}
 
   async create(userId: string, dto: CreateWorkspaceDto) {
-    // Slug unique honi chahiye
     const exists = await this.prisma.workspace.findUnique({
       where: { slug: dto.slug },
     });
     if (exists) throw new ConflictException('Slug already taken');
 
-    // Transaction: Workspace banao + Membership banao (OWNER) 
     const workspace = await this.prisma.$transaction(async (tx) => {
       const ws = await tx.workspace.create({
         data: { name: dto.name, slug: dto.slug },
@@ -36,7 +38,6 @@ export class WorkspacesService {
   }
 
   async findMyWorkspaces(userId: string) {
-    // User ke saare workspaces lao + role bhi batao
     const memberships = await this.prisma.membership.findMany({
       where: { userId },
       include: { workspace: true },
@@ -48,21 +49,34 @@ export class WorkspacesService {
     }));
   }
 
+  async findOne(id: string) {
+    const workspace = await this.prisma.workspace.findUnique({
+      where: { id },
+    });
+    if (!workspace) throw new NotFoundException('Workspace not found');
+    return workspace;
+  }
+
+  async update(id: string, name: string) {
+    return this.prisma.workspace.update({
+      where: { id },
+      data: { name },
+    });
+  }
+
   async inviteToWorkspace(workspaceId: string, dto: InviteMemberDto) {
-    // Invite token banao
     const invite = await this.prisma.invite.create({
       data: {
         workspaceId,
         email: dto.email,
         role: dto.role,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       },
     });
- 
+
     return {
       message: 'Invite created',
       token: invite.token,
-   
       acceptLink: `http://localhost:3000/invite/${invite.token}`,
     };
   }
@@ -74,9 +88,9 @@ export class WorkspacesService {
 
     if (!invite) throw new NotFoundException('Invalid invite');
     if (invite.usedAt) throw new ConflictException('Invite already used');
-    if (invite.expiresAt < new Date()) throw new ConflictException('Invite expired');
+    if (invite.expiresAt < new Date())
+      throw new ConflictException('Invite expired');
 
-    // Transaction: Membership banao + Invite mark as used
     await this.prisma.$transaction(async (tx) => {
       await tx.membership.create({
         data: {

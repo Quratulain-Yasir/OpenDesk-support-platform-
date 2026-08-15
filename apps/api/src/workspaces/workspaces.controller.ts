@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
   UseGuards,
@@ -29,6 +30,18 @@ export class WorkspacesController {
   @Get()
   findMine(@GetUser() user: { userId: string }) {
     return this.workspacesService.findMyWorkspaces(user.userId);
+  }
+
+  @Get(':id')
+  @UseGuards(WorkspaceMemberGuard)
+  findOne(@Param('id') id: string) {
+    return this.workspacesService.findOne(id);
+  }
+
+  @Patch(':id')
+  @UseGuards(WorkspaceMemberGuard)
+  update(@Param('id') id: string, @Body('name') name: string) {
+    return this.workspacesService.update(id, name);
   }
 
   @Post(':id/invite')
