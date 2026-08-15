@@ -32,10 +32,23 @@ export default function LoginPage() {
         method: 'POST',
         body: JSON.stringify(body),
       });
+
+      // Token & user save karo
       localStorage.setItem('accessToken', res.accessToken);
       localStorage.setItem('user', JSON.stringify(res.user));
       setUser(res.user);
-      router.push('/dashboard');
+
+      // Workspaces check karo
+      const workspaces = await api('/workspaces');
+
+      if (workspaces.length === 0) {
+        // Koi workspace nahi → onboarding
+        router.push('/onboarding');
+      } else {
+        // Pehli workspace select karo
+        localStorage.setItem('workspaceId', workspaces[0].id);
+        router.push('/dashboard/tickets');
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {

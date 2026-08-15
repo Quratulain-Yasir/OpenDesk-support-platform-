@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { publicApi } from "@/lib/public-api"
+import Link from "next/link"
 
 interface Message {
   id: string
@@ -87,6 +88,15 @@ export default function TrackTicketPage() {
   return (
     <div className="min-h-screen bg-background px-6 py-12">
       <div className="mx-auto max-w-2xl space-y-6">
+        <div className="flex items-center justify-between">
+          <Link
+            href="/"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            ← Submit another ticket
+          </Link>
+          <span className="text-xs text-muted-foreground">Public Tracking</span>
+        </div>
         {/* Ticket Header */}
         <Card>
           <CardHeader>

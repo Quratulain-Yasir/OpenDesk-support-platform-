@@ -1,9 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { api } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
@@ -45,6 +47,7 @@ const PRIORITY_COLORS: Record<string, string> = {
 }
 
 export default function TicketsPage() {
+  const router = useRouter()
   const { user } = useAuth()
   const [tickets, setTickets] = useState<Ticket[]>([])
   const [loading, setLoading] = useState(true)
@@ -118,6 +121,22 @@ export default function TicketsPage() {
     )
   }
 
+  // No workspace found → Show CTA to create one
+  if (error === "No workspaces found" || !workspaceId) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center">
+        <h1 className="mb-2 text-2xl font-bold">No Workspace Found</h1>
+        <p className="mb-6 max-w-sm text-muted-foreground">
+          You are not a member of any workspace yet. Create one to start
+          managing tickets.
+        </p>
+        <Button onClick={() => router.push("/onboarding")} size="lg">
+          Create Workspace
+        </Button>
+      </div>
+    )
+  }
+
   if (error) {
     return (
       <div className="p-6">
@@ -125,15 +144,6 @@ export default function TicketsPage() {
         <div className="rounded border border-red-200 bg-red-50 p-4 text-red-600">
           {error}
         </div>
-      </div>
-    )
-  }
-
-  if (!workspaceId) {
-    return (
-      <div className="p-6">
-        <h1 className="mb-6 text-2xl font-bold">Tickets</h1>
-        <p>No workspace selected. Please login or create a workspace.</p>
       </div>
     )
   }
@@ -162,7 +172,6 @@ export default function TicketsPage() {
                     key={ticket.id}
                     className="border bg-background transition-shadow hover:shadow-sm"
                   >
-                    {/* Clickable area — Link sirf yahan tak */}
                     <Link
                       href={`/dashboard/tickets/${ticket.id}`}
                       className="block p-3 pb-0"
@@ -185,14 +194,15 @@ export default function TicketsPage() {
                       </p>
                     </Link>
 
-                    {/* Non-clickable area — Link ke bahar */}
                     <div className="flex items-center justify-between border-t bg-muted/30 px-3 py-2">
                       <span className="text-xs text-muted-foreground">
                         {ticket.assignee?.name || "Unassigned"}
                       </span>
                       <Select
                         defaultValue={ticket.status}
-                        onValueChange={(val) => val && updateStatus(ticket.id, val)}
+                        onValueChange={(val) =>
+                          val && updateStatus(ticket.id, val)
+                        }
                       >
                         <SelectTrigger className="h-7 w-28 text-xs">
                           <SelectValue />
