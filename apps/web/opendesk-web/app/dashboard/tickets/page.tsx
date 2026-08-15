@@ -57,7 +57,7 @@ export default function TicketsPage() {
   async function loadTickets(wsId: string) {
     try {
       console.log("Fetching tickets for workspace:", wsId)
-      const data = await api(`/workspaces/${wsId}/tickets`)
+      const data = await api<Ticket[]>(`/workspaces/${wsId}/tickets`)
       console.log("Tickets loaded:", data)
       setTickets(data)
       setError("")

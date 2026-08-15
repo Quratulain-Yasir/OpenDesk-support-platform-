@@ -38,7 +38,7 @@ export default function SavedResponsesPage() {
 
   async function loadResponses(wsId: string) {
     try {
-      const data = await api(`/workspaces/${wsId}/saved-responses`)
+      const data = await api<SavedResponse[]>(`/workspaces/${wsId}/saved-responses`)
       setResponses(data)
     } catch {
       setResponses([])

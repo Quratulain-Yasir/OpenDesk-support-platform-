@@ -41,41 +41,41 @@ export default function SettingsPage() {
 
   async function loadWorkspace(id: string) {
     try {
-      const data = await api(`/workspaces/${id}`)
+      const data = await api<{ name?: string }>(`/workspaces/${id}`)
       setWorkspaceName(data.name || "")
     } catch {
       setWorkspaceName("")
     }
   }
 
-function compressImage(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      img.src = e.target?.result as string
-      img.onload = () => {
-        const canvas = document.createElement("canvas")
-        const size = 128
-        canvas.width = size
-        canvas.height = size
-        const ctx = canvas.getContext("2d")
-        ctx?.drawImage(img, 0, 0, size, size)
-        resolve(canvas.toDataURL("image/jpeg", 0.7))
+  function compressImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        img.src = e.target?.result as string
+        img.onload = () => {
+          const canvas = document.createElement("canvas")
+          const size = 128
+          canvas.width = size
+          canvas.height = size
+          const ctx = canvas.getContext("2d")
+          ctx?.drawImage(img, 0, 0, size, size)
+          resolve(canvas.toDataURL("image/jpeg", 0.7))
+        }
       }
-    }
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
-}
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
 
-async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-  const file = e.target.files?.[0]
-  if (!file) return
-  const compressed = await compressImage(file)
-  setAvatarPreview(compressed)
-  setAvatarFile(file)
-}
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const compressed = await compressImage(file)
+    setAvatarPreview(compressed)
+    setAvatarFile(file)
+  }
 
   async function updateProfile(e: React.FormEvent) {
     e.preventDefault()
