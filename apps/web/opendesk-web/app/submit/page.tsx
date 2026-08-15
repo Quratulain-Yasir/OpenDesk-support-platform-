@@ -82,7 +82,7 @@ export default function SubmitTicketPage() {
               <Label htmlFor="workspace">Workspace</Label>
               <Select
                 value={selectedWorkspace}
-                onValueChange={setSelectedWorkspace}
+                onValueChange={(value) => setSelectedWorkspace(value || '')}
               >
                 <SelectTrigger id="workspace">
                   <SelectValue placeholder="Select workspace" />
