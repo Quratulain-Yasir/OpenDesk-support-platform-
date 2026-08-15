@@ -79,7 +79,9 @@ export class WorkspacesService {
     });
 
     const frontendUrl =
-      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+      this.configService.get<string>('FRONTEND_URL') ||
+      'https://open-desk-support-platform.vercel.app';
+    const cleanUrl = frontendUrl.replace(/\/$/, '');
 
     return {
       message: 'Invite created',
