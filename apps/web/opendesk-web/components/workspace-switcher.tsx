@@ -40,7 +40,7 @@ export default function WorkspaceSwitcher() {
   return (
     <div className="px-4 py-3 border-b">
       <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">Workspace</p>
-      <Select value={currentId} onValueChange={switchWorkspace}>
+      <Select value={currentId} onValueChange={(value) => value && switchWorkspace(value)}>
         <SelectTrigger className="w-full h-9 text-sm font-medium bg-muted/50">
           <SelectValue placeholder="Select workspace">
             {current?.name || "Loading..."}
