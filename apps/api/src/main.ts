@@ -9,6 +9,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
 
@@ -18,7 +19,6 @@ async function bootstrap(): Promise<void> {
   const allowedOrigins = ['http://localhost:3000'];
 
   if (frontendUrl) {
-    // Remove trailing slash agar ho toh
     const cleanUrl = frontendUrl.replace(/\/$/, '');
     if (!allowedOrigins.includes(cleanUrl)) {
       allowedOrigins.push(cleanUrl);

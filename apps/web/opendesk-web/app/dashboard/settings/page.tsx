@@ -48,14 +48,34 @@ export default function SettingsPage() {
     }
   }
 
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setAvatarFile(file)
+function compressImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
     const reader = new FileReader()
-    reader.onloadend = () => setAvatarPreview(reader.result as string)
+    reader.onload = (e) => {
+      img.src = e.target?.result as string
+      img.onload = () => {
+        const canvas = document.createElement("canvas")
+        const size = 128
+        canvas.width = size
+        canvas.height = size
+        const ctx = canvas.getContext("2d")
+        ctx?.drawImage(img, 0, 0, size, size)
+        resolve(canvas.toDataURL("image/jpeg", 0.7))
+      }
+    }
+    reader.onerror = reject
     reader.readAsDataURL(file)
-  }
+  })
+}
+
+async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  const compressed = await compressImage(file)
+  setAvatarPreview(compressed)
+  setAvatarFile(file)
+}
 
   async function updateProfile(e: React.FormEvent) {
     e.preventDefault()
