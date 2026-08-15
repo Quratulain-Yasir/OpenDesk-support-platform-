@@ -105,7 +105,7 @@ export default function TeamPage() {
                 required
                 className="flex-1"
               />
-              <Select value={inviteRole} onValueChange={setInviteRole}>
+              <Select value={inviteRole} onValueChange={(value) => setInviteRole(value || 'AGENT')}>
                 <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>

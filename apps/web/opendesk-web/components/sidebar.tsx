@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Ticket, LayoutDashboard, Settings, Users } from 'lucide-react';
+import WorkspaceSwitcher from '@/components/workspace-switcher';
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -19,6 +20,10 @@ export function Sidebar() {
       <div className="p-6 border-b">
         <h2 className="text-lg font-bold">OpenDesk</h2>
       </div>
+      
+      {/* YEH ADD KIYA — Workspace Switcher */}
+      <WorkspaceSwitcher />
+      
       <nav className="flex-1 p-4 space-y-1">
         {links.map((link) => {
           const Icon = link.icon;
