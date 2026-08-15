@@ -1,55 +1,56 @@
-'use client';
+"use client"
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { api } from '@/lib/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Clock, Users } from 'lucide-react';
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { api } from "@/lib/api"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CheckCircle, Clock, Users } from "lucide-react"
 
 interface Analytics {
-  resolvedThisWeek: number;
-  avgResponseTime: number;
-  ticketsPerAgent: { agentName: string; count: number }[];
+  resolvedThisWeek: number
+  avgResponseTime: number
+  ticketsPerAgent: { agentName: string; count: number }[]
 }
 
 export default function DashboardPage() {
-  const router = useRouter();
-  const [analytics, setAnalytics] = useState<Analytics | null>(null);
-  const [workspaceId, setWorkspaceId] = useState('');
+  const router = useRouter()
+  const [analytics, setAnalytics] = useState<Analytics | null>(null)
+  const [workspaceId, setWorkspaceId] = useState("")
 
   useEffect(() => {
-    const ws = localStorage.getItem('workspaceId') || '';
-    setWorkspaceId(ws);
-    if (ws) loadAnalytics(ws);
-  }, []);
+    const ws = localStorage.getItem("workspaceId") || ""
+    setWorkspaceId(ws)
+    if (ws) loadAnalytics(ws)
+  }, [])
 
   async function loadAnalytics(wsId: string) {
     try {
-      const data = await api(`/workspaces/${wsId}/analytics`);
-      setAnalytics(data);
+      const data = await api<Analytics>(`/workspaces/${wsId}/analytics`)
+      setAnalytics(data)
     } catch {
-      setAnalytics(null);
+      setAnalytics(null)
     }
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <button
-          onClick={() => router.push('/dashboard/tickets')}
-          className="text-sm text-muted-foreground hover:text-foreground underline"
+          onClick={() => router.push("/dashboard/tickets")}
+          className="text-sm text-muted-foreground underline hover:text-foreground"
         >
           View Tickets →
         </button>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Resolved This Week</CardTitle>
-            <CheckCircle className="w-4 h-4 text-green-500" />
+            <CardTitle className="text-sm font-medium">
+              Resolved This Week
+            </CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -60,12 +61,14 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Avg First Response</CardTitle>
-            <Clock className="w-4 h-4 text-blue-500" />
+            <CardTitle className="text-sm font-medium">
+              Avg First Response
+            </CardTitle>
+            <Clock className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {analytics ? `${analytics.avgResponseTime}m` : '0m'}
+              {analytics ? `${analytics.avgResponseTime}m` : "0m"}
             </div>
           </CardContent>
         </Card>
@@ -73,7 +76,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Active Agents</CardTitle>
-            <Users className="w-4 h-4 text-orange-500" />
+            <Users className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -83,7 +86,6 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Tickets Per Agent Table */}
       {analytics && analytics.ticketsPerAgent.length > 0 && (
         <Card>
           <CardHeader>
@@ -92,7 +94,10 @@ export default function DashboardPage() {
           <CardContent>
             <div className="space-y-2">
               {analytics.ticketsPerAgent.map((agent) => (
-                <div key={agent.agentName} className="flex justify-between text-sm">
+                <div
+                  key={agent.agentName}
+                  className="flex justify-between text-sm"
+                >
                   <span>{agent.agentName}</span>
                   <span className="font-medium">{agent.count} tickets</span>
                 </div>
@@ -102,5 +107,5 @@ export default function DashboardPage() {
         </Card>
       )}
     </div>
-  );
+  )
 }
