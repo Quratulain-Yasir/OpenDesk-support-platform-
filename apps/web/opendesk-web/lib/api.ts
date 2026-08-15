@@ -14,23 +14,22 @@ async function refreshToken(): Promise<string | null> {
   }
 }
 
-export async function api<T = unknown>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function api(
   endpoint: string,
   options: RequestInit = {}
-): Promise<T> {
-  // SSR safety — localStorage sirf browser pe available
+): Promise<any> {
   if (typeof window === "undefined") {
     throw new Error("api() can only be called in the browser")
   }
 
-  const token = localStorage.getItem('accessToken');
+  const token = localStorage.getItem("accessToken")
 
   const makeRequest = async (accessToken: string | null) => {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
       ...(options.headers as Record<string, string>),
     }
-
     if (accessToken) {
       headers["Authorization"] = `Bearer ${accessToken}`
     }
@@ -45,7 +44,6 @@ export async function api<T = unknown>(
 
   let res = await makeRequest(token)
 
-  // Token expire ho gaya → refresh karo
   if (res.status === 401 && token) {
     const newToken = await refreshToken()
     if (newToken) {
@@ -57,7 +55,6 @@ export async function api<T = unknown>(
     }
   }
 
-  // Agar token hi nahi tha aur 401 aaya → login pe bhejo
   if (res.status === 401 && !token) {
     window.location.href = "/login"
     throw new Error("Unauthorized")
