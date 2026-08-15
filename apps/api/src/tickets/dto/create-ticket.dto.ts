@@ -18,4 +18,8 @@ export class CreateTicketDto {
   @IsOptional()
   @IsEnum(TicketPriority)
   priority?: TicketPriority;
+
+  @IsOptional()
+  @IsString()
+  workspaceId?: string;
 }

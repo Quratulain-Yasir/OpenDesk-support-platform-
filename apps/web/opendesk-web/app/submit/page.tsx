@@ -1,56 +1,73 @@
-'use client';
+"use client"
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { publicApi } from '@/lib/public-api';
+} from "@/components/ui/select"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { publicApi } from "@/lib/public-api"
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
 
 export default function SubmitTicketPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [workspaces, setWorkspaces] = useState<{ id: string; name: string }[]>(
+    []
+  )
+  const [selectedWorkspace, setSelectedWorkspace] = useState("")
+
+  // Workspaces fetch karo (public endpoint)
+  useEffect(() => {
+    fetch(`${API_URL}/workspaces/public`)
+      .then((r) => r.json())
+      .then((data) => {
+        setWorkspaces(data)
+        if (data.length > 0) setSelectedWorkspace(data[0].id)
+      })
+      .catch(() => setWorkspaces([]))
+  }, [])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+    e.preventDefault()
+    setLoading(true)
+    setError("")
 
-    const form = new FormData(e.currentTarget);
+    const form = new FormData(e.currentTarget)
     const body = {
-      subject: form.get('subject') as string,
-      description: form.get('description') as string,
-      customerEmail: form.get('customerEmail') as string,
-      customerName: form.get('customerName') as string,
-      priority: (form.get('priority') as string) || 'MEDIUM',
-    };
+      subject: form.get("subject") as string,
+      description: form.get("description") as string,
+      customerEmail: form.get("customerEmail") as string,
+      customerName: form.get("customerName") as string,
+      priority: (form.get("priority") as string) || "MEDIUM",
+      workspaceId: selectedWorkspace, // ← YEH ADD KIYA
+    }
 
     try {
-      const res = await publicApi('/public/tickets', {
-        method: 'POST',
+      const res = await publicApi("/public/tickets", {
+        method: "POST",
         body: JSON.stringify(body),
-      });
-      // Redirect to tracking page with public token
-      router.push(`/track/${res.publicToken}`);
+      })
+      router.push(`/track/${res.publicToken}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit');
+      setError(err instanceof Error ? err.message : "Failed to submit")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6 bg-background">
+    <div className="flex min-h-screen items-center justify-center bg-background px-6">
       <Card className="w-full max-w-lg">
         <CardHeader>
           <CardTitle className="text-2xl">Submit a Ticket</CardTitle>
@@ -60,9 +77,34 @@ export default function SubmitTicketPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Workspace Dropdown — NEW */}
+            <div>
+              <Label htmlFor="workspace">Workspace</Label>
+              <Select
+                value={selectedWorkspace}
+                onValueChange={setSelectedWorkspace}
+              >
+                <SelectTrigger id="workspace">
+                  <SelectValue placeholder="Select workspace" />
+                </SelectTrigger>
+                <SelectContent>
+                  {workspaces.map((ws) => (
+                    <SelectItem key={ws.id} value={ws.id}>
+                      {ws.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div>
               <Label htmlFor="subject">Subject</Label>
-              <Input id="subject" name="subject" required placeholder="Brief issue summary" />
+              <Input
+                id="subject"
+                name="subject"
+                required
+                placeholder="Brief issue summary"
+              />
             </div>
             <div>
               <Label htmlFor="description">Description</Label>
@@ -81,7 +123,12 @@ export default function SubmitTicketPage() {
               </div>
               <div>
                 <Label htmlFor="customerEmail">Email</Label>
-                <Input id="customerEmail" name="customerEmail" type="email" required />
+                <Input
+                  id="customerEmail"
+                  name="customerEmail"
+                  type="email"
+                  required
+                />
               </div>
             </div>
             <div>
@@ -99,12 +146,16 @@ export default function SubmitTicketPage() {
               </Select>
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full bg-primary" disabled={loading}>
-              {loading ? 'Submitting...' : 'Submit Ticket'}
+            <Button
+              type="submit"
+              className="w-full bg-primary"
+              disabled={loading || !selectedWorkspace}
+            >
+              {loading ? "Submitting..." : "Submit Ticket"}
             </Button>
           </form>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

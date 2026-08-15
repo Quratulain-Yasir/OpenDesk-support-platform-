@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ActivityService } from '../activity/activity.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
@@ -12,10 +16,22 @@ export class TicketsService {
     private activity: ActivityService,
   ) {}
 
-  async create(workspaceId: string, dto: CreateTicketDto) {
+  async create(workspaceId: string | null, dto: CreateTicketDto) {
+    // Pehle DTO mein workspaceId check karo, warna param se lo, warna first workspace
+    let targetWorkspaceId = dto.workspaceId || workspaceId;
+
+    if (!targetWorkspaceId) {
+      const workspace = await this.prisma.workspace.findFirst({
+        orderBy: { createdAt: 'desc' },
+      });
+      if (!workspace)
+        throw new NotFoundException('No workspace found to assign ticket');
+      targetWorkspaceId = workspace.id;
+    }
+
     const ticket = await this.prisma.ticket.create({
       data: {
-        workspaceId,
+        workspaceId: targetWorkspaceId,
         subject: dto.subject,
         description: dto.description,
         customerEmail: dto.customerEmail,
@@ -25,9 +41,8 @@ export class TicketsService {
       },
     });
 
-    // Activity log
     await this.activity.record({
-      workspaceId,
+      workspaceId: targetWorkspaceId,
       ticketId: ticket.id,
       action: 'ticket_created',
       metadata: { subject: dto.subject },
@@ -36,14 +51,17 @@ export class TicketsService {
     return ticket;
   }
 
-  async findAll(workspaceId: string, filters: {
-    status?: string;
-    priority?: string;
-    assigneeId?: string;
-    search?: string;
-    mine?: boolean;
-    userId?: string;
-  }) {
+  async findAll(
+    workspaceId: string,
+    filters: {
+      status?: string;
+      priority?: string;
+      assigneeId?: string;
+      search?: string;
+      mine?: boolean;
+      userId?: string;
+    },
+  ) {
     const where: any = { workspaceId };
 
     if (filters.status) where.status = filters.status;
@@ -88,7 +106,12 @@ export class TicketsService {
     return ticket;
   }
 
-  async update(workspaceId: string, ticketId: string, dto: UpdateTicketDto, actorId?: string) {
+  async update(
+    workspaceId: string,
+    ticketId: string,
+    dto: UpdateTicketDto,
+    actorId?: string,
+  ) {
     const existing = await this.prisma.ticket.findFirst({
       where: { id: ticketId, workspaceId },
     });
@@ -104,7 +127,6 @@ export class TicketsService {
       },
     });
 
-    // Activity log for each change
     if (dto.status && dto.status !== existing.status) {
       await this.activity.record({
         workspaceId,
@@ -115,7 +137,10 @@ export class TicketsService {
       });
     }
 
-    if (dto.assigneeId !== undefined && dto.assigneeId !== existing.assigneeId) {
+    if (
+      dto.assigneeId !== undefined &&
+      dto.assigneeId !== existing.assigneeId
+    ) {
       await this.activity.record({
         workspaceId,
         ticketId,

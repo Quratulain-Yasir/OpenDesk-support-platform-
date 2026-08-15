@@ -16,11 +16,25 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { GetUser } from '../auth/decorators/get-user.decorator';
 import { Role } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Controller('workspaces')
 @UseGuards(JwtAuthGuard)
 export class WorkspacesController {
-  constructor(private workspacesService: WorkspacesService) {}
+  constructor(
+    private workspacesService: WorkspacesService,
+    private prisma: PrismaService,
+  ) {}
+
+  // PUBLIC: No auth needed
+  @Get('public')
+  @UseGuards()
+  async findAllPublic() {
+    return this.prisma.workspace.findMany({
+      select: { id: true, name: true, slug: true },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 
   @Post()
   create(@Body() dto: CreateWorkspaceDto, @GetUser() user: { userId: string }) {
