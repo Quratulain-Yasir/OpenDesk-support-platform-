@@ -87,10 +87,16 @@ export default function SettingsPage() {
       if (avatarPreview && avatarPreview !== currentAvatar)
         body.avatar = avatarPreview
 
-      const res = await api("/auth/me", {
+      const res = await api<{
+        id: string
+        name: string
+        email: string
+        avatar?: string
+      }>("/auth/me", {
         method: "PATCH",
         body: JSON.stringify(body),
       })
+      setUser(res)
       setUser(res)
       alert("Profile updated")
       setPassword("")
