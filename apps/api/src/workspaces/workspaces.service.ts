@@ -3,6 +3,7 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
@@ -10,7 +11,10 @@ import { Role } from '@prisma/client';
 
 @Injectable()
 export class WorkspacesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+  ) {}
 
   async create(userId: string, dto: CreateWorkspaceDto) {
     const exists = await this.prisma.workspace.findUnique({
@@ -74,10 +78,13 @@ export class WorkspacesService {
       },
     });
 
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+
     return {
       message: 'Invite created',
       token: invite.token,
-      acceptLink: `http://localhost:3000/invite/${invite.token}`,
+      acceptLink: `${cleanUrl}/invite/${invite.token}`,
     };
   }
 
