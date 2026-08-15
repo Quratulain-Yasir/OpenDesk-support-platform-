@@ -25,7 +25,7 @@ export default function DashboardPage() {
 
   async function loadAnalytics(wsId: string) {
     try {
-      const data = await api<Analytics>(`/workspaces/${wsId}/analytics`)
+      const data = await api(`/workspaces/${wsId}/analytics`)
       setAnalytics(data)
     } catch {
       setAnalytics(null)

@@ -26,7 +26,7 @@ export default function TeamPage() {
 
   async function loadTeam(id: string) {
     try {
-      const data = await api<Member[]>(`/workspaces/${id}/team`)
+      const data = await api(`/workspaces/${id}/team`)
       setMembers(data)
       const token = localStorage.getItem("accessToken")
       if (token) {

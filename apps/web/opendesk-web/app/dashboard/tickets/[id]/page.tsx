@@ -86,7 +86,7 @@ export default function TicketDetailPage() {
 
   const loadTicket = useCallback(async (wsId: string) => {
     try {
-      const data = await api<TicketDetail>(`/workspaces/${wsId}/tickets/${ticketId}`)
+      const data = await api(`/workspaces/${wsId}/tickets/${ticketId}`)
       setTicket(data)
     } catch {
       setTicket(null)
@@ -97,7 +97,7 @@ export default function TicketDetailPage() {
 
   const loadSavedResponses = useCallback(async (wsId: string) => {
     try {
-      const data = await api<SavedResponse[]>(`/workspaces/${wsId}/saved-responses`)
+      const data = await api(`/workspaces/${wsId}/saved-responses`)
       setSavedResponses(data)
     } catch {
       setSavedResponses([])

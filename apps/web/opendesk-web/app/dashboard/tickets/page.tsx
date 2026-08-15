@@ -57,7 +57,7 @@ export default function TicketsPage() {
   async function loadTickets(wsId: string) {
     try {
       console.log("Fetching tickets for workspace:", wsId)
-      const data = await api<Ticket[]>(`/workspaces/${wsId}/tickets`)
+      const data = await api(`/workspaces/${wsId}/tickets`)
       console.log("Tickets loaded:", data)
       setTickets(data)
       setError("")
@@ -76,7 +76,7 @@ export default function TicketsPage() {
       setWorkspaceId(stored)
       loadTickets(stored)
     } else {
-      api<{ id: string }[]>("/workspaces")
+      api("/workspaces")
         .then((workspaces) => {
           if (workspaces.length > 0) {
             const id = workspaces[0].id

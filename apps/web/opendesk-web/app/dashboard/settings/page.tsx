@@ -41,7 +41,7 @@ export default function SettingsPage() {
 
   async function loadWorkspace(id: string) {
     try {
-      const data = await api<{ name?: string }>(`/workspaces/${id}`)
+      const data = await api(`/workspaces/${id}`)
       setWorkspaceName(data.name || "")
     } catch {
       setWorkspaceName("")
@@ -87,12 +87,7 @@ export default function SettingsPage() {
       if (avatarPreview && avatarPreview !== currentAvatar)
         body.avatar = avatarPreview
 
-      const res = await api<{
-        id: string
-        name: string
-        email: string
-        avatar?: string
-      }>("/auth/me", {
+      const res = await api("/auth/me", {
         method: "PATCH",
         body: JSON.stringify(body),
       })
