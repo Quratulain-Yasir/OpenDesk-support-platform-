@@ -1,5 +1,6 @@
 "use client"
-import { useState } from "react"
+
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { api } from "@/lib/api"
 import { Button } from "@/components/ui/button"
@@ -11,22 +12,52 @@ export default function OnboardingPage() {
   const [name, setName] = useState("")
   const [slug, setSlug] = useState("")
   const [loading, setLoading] = useState(false)
+  const [token, setToken] = useState("")
+
+  // Token check on mount
+  useEffect(() => {
+    const t = localStorage.getItem("accessToken") || ""
+    if (!t) {
+      router.push("/login")
+      return
+    }
+    setToken(t)
+  }, [router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!token) {
+      alert("Please login first")
+      router.push("/login")
+      return
+    }
+
     setLoading(true)
     try {
       const data = await api("/workspaces", {
         method: "POST",
-        body: JSON.stringify({ name, slug: slug || name.toLowerCase().replace(/\s+/g, '-') }),
+        body: JSON.stringify({
+          name,
+          slug: slug || name.toLowerCase().replace(/\s+/g, "-"),
+        }),
       })
       localStorage.setItem("workspaceId", data.id)
       router.push("/dashboard/tickets")
-    } catch {
-      alert("Failed to create workspace")
+    } catch (err: any) {
+      if (err.message?.includes("401") || err.message?.includes("Unauthorized")) {
+        alert("Session expired. Please login again.")
+        localStorage.removeItem("accessToken")
+        router.push("/login")
+      } else {
+        alert("Failed to create workspace: " + (err.message || "Unknown error"))
+      }
     } finally {
       setLoading(false)
     }
+  }
+
+  if (!token) {
+    return <div className="p-12 text-center">Checking auth...</div>
   }
 
   return (
@@ -39,11 +70,21 @@ export default function OnboardingPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="text-sm font-medium">Workspace Name</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Acme Inc" required />
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Acme Inc"
+                required
+              />
             </div>
             <div>
-              <label className="text-sm font-medium">Slug</label>
-              <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="acme-inc" required />
+              <label className="text-sm font-medium">Slug (unique)</label>
+              <Input
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                placeholder="acme-inc"
+                required
+              />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Creating..." : "Create Workspace"}
