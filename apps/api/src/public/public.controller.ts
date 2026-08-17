@@ -11,7 +11,7 @@ export class PublicController {
     private messagesService: MessagesService,
   ) {}
 
-  // NEW: Customer creates ticket without login
+  // Customer creates ticket without login
   @Post('tickets')
   async createTicket(
     @Body()
@@ -21,16 +21,32 @@ export class PublicController {
       customerEmail: string;
       customerName?: string;
       priority?: string;
+      workspaceId?: string; // ← YEH ADD KIYA
     },
   ) {
-    const workspace = await this.prisma.workspace.findFirst();
-    if (!workspace) {
-      return { error: 'No workspace configured' };
+    let workspaceId = body.workspaceId;
+
+    // Agar frontend se workspaceId nahi aayi → fallback pehli workspace
+    if (!workspaceId) {
+      const workspace = await this.prisma.workspace.findFirst();
+      if (!workspace) {
+        return { error: 'No workspace configured' };
+      }
+      workspaceId = workspace.id;
+    } else {
+      // Verify ke ye workspace exist karti hai
+      const workspace = await this.prisma.workspace.findUnique({
+        where: { id: body.workspaceId },
+      });
+      if (!workspace) {
+        return { error: 'Invalid workspace selected' };
+      }
+      workspaceId = workspace.id;
     }
 
     const ticket = await this.prisma.ticket.create({
       data: {
-        workspaceId: workspace.id,
+        workspaceId: workspaceId, // ← AB SELECTED WORKSPACE USE HOGI
         subject: body.subject,
         description: body.description,
         customerEmail: body.customerEmail,
