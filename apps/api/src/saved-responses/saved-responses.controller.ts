@@ -49,7 +49,8 @@ export class SavedResponsesController {
   }
 
   @Delete(':id')
-  delete(@Param('workspaceId') wsId: string, @Param('id') id: string) {
-    return this.service.delete(wsId, id);
+  async delete(@Param('workspaceId') wsId: string, @Param('id') id: string) {
+    await this.service.delete(wsId, id);
+    return { message: 'Saved response deleted' };
   }
 }
