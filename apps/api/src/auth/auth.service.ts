@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
@@ -15,14 +19,13 @@ export class AuthService {
   ) {}
 
   async signup(dto: SignupDto) {
-    // Check if user exists
-    const exists = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const exists = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
     if (exists) throw new ConflictException('Email already registered');
 
-    // Hash password
     const hash = await bcrypt.hash(dto.password, 10);
 
-    // Create user
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
@@ -36,24 +39,31 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    // Find user
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email } });
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    // Check password
     const valid = await bcrypt.compare(dto.password, user.password);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
-    // Generate tokens
     const tokens = await this.generateTokens(user.id, user.email);
 
-    return { user: { id: user.id, email: user.email, name: user.name }, ...tokens };
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        avatar: user.avatar,
+      },
+      ...tokens,
+    };
   }
 
   async refresh(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true },
+      select: { id: true, email: true, name: true, avatar: true },
     });
     if (!user) throw new UnauthorizedException();
 

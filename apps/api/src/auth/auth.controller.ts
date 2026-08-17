@@ -56,8 +56,11 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  getMe(@GetUser() user: { userId: string; email: string }) {
-    return user;
+  async getMe(@GetUser() user: { userId: string }) {
+    return this.prisma.user.findUnique({
+      where: { id: user.userId },
+      select: { id: true, name: true, email: true, avatar: true },
+    });
   }
 
   @Patch('me')
