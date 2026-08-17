@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,8 @@ import { useAuth } from '@/lib/auth-context';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect');
   const { setUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,19 +35,21 @@ export default function LoginPage() {
         body: JSON.stringify(body),
       });
 
-      // Token & user save karo
       localStorage.setItem('accessToken', res.accessToken);
       localStorage.setItem('user', JSON.stringify(res.user));
       setUser(res.user);
 
-      // Workspaces check karo
+      if (redirect) {
+        // Invite ya kisi aur specific page pe wapas bhejo — workspace fetch skip
+        router.push(redirect);
+        return;
+      }
+
       const workspaces = await api('/workspaces');
 
       if (workspaces.length === 0) {
-        // Koi workspace nahi → onboarding
         router.push('/onboarding');
       } else {
-        // Pehli workspace select karo
         localStorage.setItem('workspaceId', workspaces[0].id);
         router.push('/dashboard/tickets');
       }
@@ -79,7 +83,7 @@ export default function LoginPage() {
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             No account?{' '}
-            <Link href="/signup" className="text-accent hover:underline">
+            <Link href={redirect ? `/signup?redirect=${redirect}` : '/signup'} className="text-accent hover:underline">
               Create one
             </Link>
           </p>

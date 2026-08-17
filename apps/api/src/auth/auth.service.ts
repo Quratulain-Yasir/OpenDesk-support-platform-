@@ -32,10 +32,18 @@ export class AuthService {
         password: hash,
         name: dto.name,
       },
-      select: { id: true, email: true, name: true, createdAt: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatar: true,
+        createdAt: true,
+      },
     });
 
-    return user;
+    const tokens = await this.generateTokens(user.id, user.email);
+
+    return { user, ...tokens };
   }
 
   async login(dto: LoginDto) {

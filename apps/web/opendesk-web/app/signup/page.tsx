@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,8 @@ import { useAuth } from '@/lib/auth-context';
 
 export default function SignupPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get('redirect');
   const { setUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,12 +35,19 @@ export default function SignupPage() {
         method: 'POST',
         body: JSON.stringify(body),
       });
-      setUser(res);
-      localStorage.setItem('user', JSON.stringify(res));
-      router.push('/onboarding');
+
+      localStorage.setItem('accessToken', res.accessToken);
+      localStorage.setItem('user', JSON.stringify(res.user));
+      setUser(res.user);
+
+      if (redirect) {
+        router.push(redirect);
+      } else {
+        router.push('/onboarding');
+      }
     } catch (err) {
-  setError(err instanceof Error ? err.message : 'Request failed');
-} finally {
+      setError(err instanceof Error ? err.message : 'Request failed');
+    } finally {
       setLoading(false);
     }
   }
@@ -70,7 +79,7 @@ export default function SignupPage() {
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/login" className="text-accent hover:underline">
+            <Link href={redirect ? `/login?redirect=${redirect}` : '/login'} className="text-accent hover:underline">
               Log in
             </Link>
           </p>

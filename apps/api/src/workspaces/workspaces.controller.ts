@@ -27,7 +27,6 @@ export class WorkspacesController {
     private prisma: PrismaService,
   ) {}
 
-  // PUBLIC: No auth needed
   @Get('public')
   @Public()
   async findAllPublic() {
@@ -59,19 +58,19 @@ export class WorkspacesController {
     return this.workspacesService.update(id, name);
   }
 
+  // NEW — /team route TeamController mein already hai, isliye yahan sirf invites
+  @Get(':id/invites')
+  @UseGuards(WorkspaceMemberGuard, RolesGuard)
+  @Roles(Role.OWNER, Role.ADMIN)
+  getInvites(@Param('id') id: string) {
+    return this.workspacesService.getPendingInvites(id);
+  }
+
   @Post(':id/invite')
   @UseGuards(WorkspaceMemberGuard, RolesGuard)
   @Roles(Role.OWNER, Role.ADMIN)
   invite(@Param('id') id: string, @Body() dto: InviteMemberDto) {
     return this.workspacesService.inviteToWorkspace(id, dto);
-  }
-
-  // NEW: Get pending invites
-  @Get(':id/invites')
-  @UseGuards(WorkspaceMemberGuard, RolesGuard)
-  @Roles(Role.OWNER, Role.ADMIN)
-  findPendingInvites(@Param('id') id: string) {
-    return this.workspacesService.findPendingInvites(id);
   }
 
   @Post('accept/:token')
