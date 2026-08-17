@@ -91,8 +91,8 @@ export default function SettingsPage() {
         method: "PATCH",
         body: JSON.stringify(body),
       })
-      setUser(res)
-      setUser(res)
+      setUser(res) // ← ab ye auto localStorage bhi update karega
+      setAvatarPreview(res.avatar || "") // ← fresh avatar sync
       alert("Profile updated")
       setPassword("")
       setAvatarFile(null)
