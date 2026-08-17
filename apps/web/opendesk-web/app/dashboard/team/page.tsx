@@ -6,7 +6,13 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface Member {
   id: string
@@ -14,8 +20,16 @@ interface Member {
   user: { id: string; name: string; email: string }
 }
 
+interface PendingInvite {
+  id: string
+  email: string
+  role: string
+  createdAt: string
+}
+
 export default function TeamPage() {
   const [members, setMembers] = useState<Member[]>([])
+  const [pending, setPending] = useState<PendingInvite[]>([])
   const [myRole, setMyRole] = useState("")
   const [wsId, setWsId] = useState("")
 
@@ -28,7 +42,10 @@ export default function TeamPage() {
   useEffect(() => {
     const id = localStorage.getItem("workspaceId") || ""
     setWsId(id)
-    if (id) loadTeam(id)
+    if (id) {
+      loadTeam(id)
+      loadPending(id)
+    }
   }, [])
 
   async function loadTeam(id: string) {
@@ -47,6 +64,15 @@ export default function TeamPage() {
     }
   }
 
+  async function loadPending(id: string) {
+    try {
+      const data = await api(`/workspaces/${id}/invites`)
+      setPending(data)
+    } catch {
+      setPending([])
+    }
+  }
+
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault()
     if (!wsId) return
@@ -57,8 +83,9 @@ export default function TeamPage() {
         method: "POST",
         body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
       })
-      setInviteMsg(`Invite sent! Link: ${res.acceptLink}`)
+      setInviteMsg(`Invitation sent to ${inviteEmail}`)
       setInviteEmail("")
+      loadPending(wsId) // Immediately show as pending
     } catch (err: any) {
       setInviteMsg(err.message || "Failed to send invite")
     } finally {
@@ -68,7 +95,10 @@ export default function TeamPage() {
 
   async function changeRole(mId: string, role: string) {
     try {
-      await api(`/workspaces/${wsId}/team/${mId}`, { method: "PATCH", body: JSON.stringify({ role }) })
+      await api(`/workspaces/${wsId}/team/${mId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ role }),
+      })
       loadTeam(wsId)
     } catch {
       alert("Failed to update role")
@@ -88,15 +118,18 @@ export default function TeamPage() {
   const canManage = myRole === "OWNER" || myRole === "ADMIN"
 
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Team</h1>
+    <div className="mx-auto max-w-3xl p-6">
+      <h1 className="mb-6 text-2xl font-bold">Team</h1>
 
-      {/* Invite Member Form — Only for Owner/Admin */}
+      {/* Invite Member Form */}
       {canManage && (
         <Card className="mb-6">
           <CardContent className="p-4">
             <h3 className="mb-3 text-sm font-semibold">Invite Team Member</h3>
-            <form onSubmit={handleInvite} className="flex flex-col gap-3 sm:flex-row">
+            <form
+              onSubmit={handleInvite}
+              className="flex flex-col gap-3 sm:flex-row"
+            >
               <Input
                 placeholder="teammate@company.com"
                 value={inviteEmail}
@@ -105,7 +138,10 @@ export default function TeamPage() {
                 required
                 className="flex-1"
               />
-              <Select value={inviteRole} onValueChange={(value) => setInviteRole(value || 'AGENT')}>
+              <Select
+                value={inviteRole}
+                onValueChange={(value) => value && setInviteRole(value)}
+              >
                 <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
@@ -119,14 +155,52 @@ export default function TeamPage() {
               </Button>
             </form>
             {inviteMsg && (
-              <p className="mt-2 text-xs text-green-600 break-all">{inviteMsg}</p>
+              <p className="mt-2 text-xs text-green-600">{inviteMsg}</p>
             )}
           </CardContent>
         </Card>
       )}
 
+      {/* Pending Invitations */}
+      {pending.length > 0 && (
+        <div className="mb-6">
+          <h2 className="mb-3 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+            Pending Invitations
+          </h2>
+          <div className="space-y-2">
+            {pending.map((inv) => (
+              <Card key={inv.id}>
+                <CardContent className="flex items-center justify-between p-4">
+                  <div>
+                    <p className="font-medium">{inv.email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Invited {new Date(inv.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{inv.role}</Badge>
+                    <Badge
+                      variant="secondary"
+                      className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+                    >
+                      Pending
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Active Members */}
       <div className="space-y-3">
-        {members.length === 0 && <p className="text-muted-foreground">No members found.</p>}
+        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+          Members
+        </h2>
+        {members.length === 0 && (
+          <p className="text-muted-foreground">No members found.</p>
+        )}
         {members.map((m) => (
           <Card key={m.id}>
             <CardContent className="flex items-center justify-between p-4">
@@ -135,11 +209,16 @@ export default function TeamPage() {
                 <p className="text-xs text-muted-foreground">{m.user.email}</p>
               </div>
               <div className="flex items-center gap-3">
-                <Badge variant={m.role === "OWNER" ? "default" : "secondary"}>{m.role}</Badge>
+                <Badge variant={m.role === "OWNER" ? "default" : "secondary"}>
+                  {m.role}
+                </Badge>
                 {canManage && m.role !== "OWNER" && (
                   <>
-                    <Select defaultValue={m.role} onValueChange={(v) => v && changeRole(m.id, v)}>
-                      <SelectTrigger className="w-28 h-8 text-xs">
+                    <Select
+                      defaultValue={m.role}
+                      onValueChange={(v) => v && changeRole(m.id, v)}
+                    >
+                      <SelectTrigger className="h-8 w-28 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -147,7 +226,12 @@ export default function TeamPage() {
                         <SelectItem value="AGENT">Agent</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => removeMember(m.id)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive"
+                      onClick={() => removeMember(m.id)}
+                    >
                       Remove
                     </Button>
                   </>

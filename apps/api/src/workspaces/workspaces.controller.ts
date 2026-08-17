@@ -66,6 +66,14 @@ export class WorkspacesController {
     return this.workspacesService.inviteToWorkspace(id, dto);
   }
 
+  // NEW: Get pending invites
+  @Get(':id/invites')
+  @UseGuards(WorkspaceMemberGuard, RolesGuard)
+  @Roles(Role.OWNER, Role.ADMIN)
+  findPendingInvites(@Param('id') id: string) {
+    return this.workspacesService.findPendingInvites(id);
+  }
+
   @Post('accept/:token')
   @UseGuards(JwtAuthGuard)
   accept(@Param('token') token: string, @GetUser() user: { userId: string }) {
