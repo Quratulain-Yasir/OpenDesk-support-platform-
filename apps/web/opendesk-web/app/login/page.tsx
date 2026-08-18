@@ -44,6 +44,12 @@ function LoginForm() {
         return
       }
 
+      const pendingInvite = localStorage.getItem('pendingInviteToken');
+      if (pendingInvite) {
+        router.push(`/invite/${pendingInvite}`);
+        return;
+      }
+      
       const workspaces = await api("/workspaces")
 
       if (workspaces.length === 0) {
