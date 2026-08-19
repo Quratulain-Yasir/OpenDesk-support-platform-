@@ -88,22 +88,23 @@ export function LeadDrawer({ leadId, workspaceId, open, onOpenChange, onStatusCh
     }
   }, [open, leadId, loadLead])
 
-  async function handleStatusChange(newStatus: string) {
-    if (!lead || !workspaceId) return
-    const prevStatus = lead.status
-    setLead({ ...lead, status: newStatus }) // optimistic
-    try {
-      await api(`/workspaces/${workspaceId}/leads/${lead.id}`, {
-        method: "PATCH",
-        body: JSON.stringify({ status: newStatus }),
-      })
-      onStatusChanged?.(lead.id, newStatus) // Kanban board ko bhi sync karo
-      loadLead() // Activity log refresh karne ke liye
-    } catch {
-      alert("Failed to update status")
-      setLead({ ...lead, status: prevStatus })
-    }
+async function handleStatusChange(newStatus: string | null) {
+  if (!newStatus) return
+  if (!lead || !workspaceId) return
+  const prevStatus = lead.status
+  setLead({ ...lead, status: newStatus })
+  try {
+    await api(`/workspaces/${workspaceId}/leads/${lead.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ status: newStatus }),
+    })
+    onStatusChanged?.(lead.id, newStatus)
+    loadLead()
+  } catch {
+    alert("Failed to update status")
+    setLead({ ...lead, status: prevStatus })
   }
+}
 
   async function handleSendComment(e: React.FormEvent) {
     e.preventDefault()
