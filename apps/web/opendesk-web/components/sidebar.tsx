@@ -8,12 +8,14 @@ import {
   Settings,
   Users,
   FileText,
+  Contact,
 } from "lucide-react"
 import WorkspaceSwitcher from "@/components/workspace-switcher"
 
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/tickets", label: "Tickets", icon: Ticket },
+  { href: "/dashboard/leads", label: "Leads", icon: Contact },
   { href: "/dashboard/forms", label: "Forms", icon: FileText },
   { href: "/dashboard/team", label: "Team", icon: Users },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },

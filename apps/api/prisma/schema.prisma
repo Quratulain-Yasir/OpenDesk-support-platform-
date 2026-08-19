@@ -205,11 +205,20 @@ model FormField {
   @@map("form_fields")
 }
 
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  WON
+  LOST
+}
+
 model Lead {
-  id        String   @id @default(cuid())
-  formId    String   @map("form_id")
+  id        String     @id @default(cuid())
+  formId    String     @map("form_id")
   data      Json
-  createdAt DateTime @default(now()) @map("created_at")
+  status    LeadStatus @default(NEW)
+  createdAt DateTime   @default(now()) @map("created_at")
 
   form Form @relation(fields: [formId], references: [id], onDelete: Cascade)
 
