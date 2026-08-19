@@ -102,7 +102,8 @@ model Ticket {
 
 model Message {
   id          String   @id @default(cuid())
-  ticketId    String   @map("ticket_id")
+  ticketId    String?  @map("ticket_id")
+  leadId      String?  @map("lead_id")
   workspaceId String   @map("workspace_id")
   content     String
   isInternal  Boolean  @default(false) @map("is_internal")
@@ -110,8 +111,9 @@ model Message {
   authorName  String?  @map("author_name")
   createdAt   DateTime @default(now()) @map("created_at")
 
-  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  author User?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  ticket Ticket? @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  lead   Lead?   @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  author User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
   @@map("messages")
 }
@@ -119,14 +121,16 @@ model Message {
 model Activity {
   id          String   @id @default(cuid())
   workspaceId String   @map("workspace_id")
-  ticketId    String   @map("ticket_id")
+  ticketId    String?  @map("ticket_id")
+  leadId      String?  @map("lead_id")
   actorId     String?  @map("actor_id")
   action      String
   metadata    Json?
   createdAt   DateTime @default(now()) @map("created_at")
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  ticket    Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticket    Ticket?   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  lead      Lead?     @relation(fields: [leadId], references: [id], onDelete: Cascade)
   actor     User?     @relation(fields: [actorId], references: [id], onDelete: SetNull)
 
   @@map("activities")
@@ -220,7 +224,9 @@ model Lead {
   status    LeadStatus @default(NEW)
   createdAt DateTime   @default(now()) @map("created_at")
 
-  form Form @relation(fields: [formId], references: [id], onDelete: Cascade)
+  form       Form       @relation(fields: [formId], references: [id], onDelete: Cascade)
+  messages   Message[]
+  activities Activity[]
 
   @@index([formId])
   @@map("leads")

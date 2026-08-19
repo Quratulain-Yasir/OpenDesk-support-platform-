@@ -7,7 +7,8 @@ export class ActivityService {
 
   async record(params: {
     workspaceId: string;
-    ticketId: string;
+    ticketId?: string;
+    leadId?: string;
     actorId?: string;
     action: string;
     metadata?: Record<string, any>;
@@ -16,6 +17,7 @@ export class ActivityService {
       data: {
         workspaceId: params.workspaceId,
         ticketId: params.ticketId,
+        leadId: params.leadId,
         actorId: params.actorId,
         action: params.action,
         metadata: params.metadata || {},

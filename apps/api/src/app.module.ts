@@ -12,7 +12,8 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { TeamModule } from './team/team.module';
 import { MailModule } from './mail/mail.module';
 import { FormsModule } from './forms/forms.module';
-import { LeadsModule } from './leads/leads.module'; // NEW
+import { LeadsModule } from './leads/leads.module';  
+
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { LeadsModule } from './leads/leads.module'; // NEW
     TeamModule,
     MailModule,
     FormsModule,
-    LeadsModule, // NEW
+    LeadsModule, 
   ],
 })
 export class AppModule {}

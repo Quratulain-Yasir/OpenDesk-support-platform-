@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { api } from "@/lib/api"
-import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   DndContext,
@@ -16,6 +15,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core"
+import { LeadDrawer } from "@/components/leads/lead-drawer"
 
 interface Lead {
   id: string
@@ -27,23 +27,37 @@ interface Lead {
 
 const COLUMNS = [
   { key: "NEW", label: "New", color: "border-t-2 border-blue-500" },
-  { key: "CONTACTED", label: "Contacted", color: "border-t-2 border-yellow-500" },
-  { key: "QUALIFIED", label: "Qualified", color: "border-t-2 border-orange-500" },
+  {
+    key: "CONTACTED",
+    label: "Contacted",
+    color: "border-t-2 border-yellow-500",
+  },
+  {
+    key: "QUALIFIED",
+    label: "Qualified",
+    color: "border-t-2 border-orange-500",
+  },
   { key: "WON", label: "Won", color: "border-t-2 border-green-500" },
   { key: "LOST", label: "Lost", color: "border-t-2 border-red-500" },
 ]
 
-// Lead.data ke andar pehla field jo mile (usually "Name" ya "Email") wahi title ki tarah dikhao
 function getLeadTitle(lead: Lead) {
   const values = Object.values(lead.data)
   return values[0] || "Untitled Lead"
 }
 
-function LeadCard({ lead }: { lead: Lead }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: lead.id,
-    data: { lead },
-  })
+function LeadCard({
+  lead,
+  onOpen,
+}: {
+  lead: Lead
+  onOpen: (id: string) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({
+      id: lead.id,
+      data: { lead },
+    })
 
   const style = transform
     ? {
@@ -58,22 +72,34 @@ function LeadCard({ lead }: { lead: Lead }) {
       style={style}
       {...listeners}
       {...attributes}
-      className="border bg-background p-3 cursor-grab active:cursor-grabbing hover:shadow-sm"
+      onClick={() => onOpen(lead.id)} // Drag threshold cross na ho toh yeh normal click ki tarah fire hota hai
+      className="cursor-grab border bg-background p-3 hover:shadow-sm active:cursor-grabbing"
     >
-      <p className="text-sm font-medium mb-1">{getLeadTitle(lead)}</p>
+      <p className="mb-1 text-sm font-medium">{getLeadTitle(lead)}</p>
       <p className="text-xs text-muted-foreground">{lead.form.name}</p>
-      <p className="text-xs text-muted-foreground mt-1">
+      <p className="mt-1 text-xs text-muted-foreground">
         {new Date(lead.createdAt).toLocaleDateString()}
       </p>
     </div>
   )
 }
 
-function Column({ col, leads }: { col: (typeof COLUMNS)[number]; leads: Lead[] }) {
+function Column({
+  col,
+  leads,
+  onOpen,
+}: {
+  col: (typeof COLUMNS)[number]
+  leads: Lead[]
+  onOpen: (id: string) => void
+}) {
   const { setNodeRef, isOver } = useDroppable({ id: col.key })
 
   return (
-    <div ref={setNodeRef} className={`border bg-card ${col.color} ${isOver ? "ring-2 ring-primary/40" : ""}`}>
+    <div
+      ref={setNodeRef}
+      className={`border bg-card ${col.color} ${isOver ? "ring-2 ring-primary/40" : ""}`}
+    >
       <div className="border-b bg-muted/50 p-3">
         <h3 className="text-sm font-semibold">
           {col.label} ({leads.length})
@@ -81,10 +107,12 @@ function Column({ col, leads }: { col: (typeof COLUMNS)[number]; leads: Lead[] }
       </div>
       <div className="min-h-[200px] space-y-3 p-3">
         {leads.length === 0 && (
-          <p className="py-8 text-center text-xs text-muted-foreground">No leads</p>
+          <p className="py-8 text-center text-xs text-muted-foreground">
+            No leads
+          </p>
         )}
         {leads.map((lead) => (
-          <LeadCard key={lead.id} lead={lead} />
+          <LeadCard key={lead.id} lead={lead} onOpen={onOpen} />
         ))}
       </div>
     </div>
@@ -96,6 +124,10 @@ export default function LeadsPage() {
   const [loading, setLoading] = useState(true)
   const [wsId, setWsId] = useState("")
   const [activeLead, setActiveLead] = useState<Lead | null>(null)
+
+  // Drawer state
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -119,7 +151,9 @@ export default function LeadsPage() {
   }
 
   async function updateStatus(leadId: string, newStatus: string) {
-    setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, status: newStatus } : l)))
+    setLeads((prev) =>
+      prev.map((l) => (l.id === leadId ? { ...l, status: newStatus } : l))
+    )
     try {
       await api(`/workspaces/${wsId}/leads/${leadId}`, {
         method: "PATCH",
@@ -149,6 +183,11 @@ export default function LeadsPage() {
     updateStatus(leadId, newStatus)
   }
 
+  function openDrawer(leadId: string) {
+    setSelectedLeadId(leadId)
+    setDrawerOpen(true)
+  }
+
   if (loading) {
     return (
       <div className="space-y-4 p-6">
@@ -174,18 +213,33 @@ export default function LeadsPage() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-5">
           {COLUMNS.map((col) => {
             const colLeads = leads.filter((l) => l.status === col.key)
-            return <Column key={col.key} col={col} leads={colLeads} />
+            return (
+              <Column
+                key={col.key}
+                col={col}
+                leads={colLeads}
+                onOpen={openDrawer}
+              />
+            )
           })}
         </div>
 
         <DragOverlay>
           {activeLead ? (
-            <div className="w-64 border bg-background shadow-lg opacity-90 p-3">
+            <div className="w-64 border bg-background p-3 opacity-90 shadow-lg">
               <p className="text-sm font-medium">{getLeadTitle(activeLead)}</p>
             </div>
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      <LeadDrawer
+        leadId={selectedLeadId}
+        workspaceId={wsId}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        onStatusChanged={updateStatus}
+      />
     </div>
   )
 }
