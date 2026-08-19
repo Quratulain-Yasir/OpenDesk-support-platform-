@@ -51,9 +51,13 @@ export default function FormsPage() {
   }
 
   function copyEmbedCode(formId: string) {
-    // NEXT_PUBLIC_API_URL wahi hai jo lib/api.ts mein use hota hai
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
-    const embedCode = `<script src="${apiUrl}/embed.js" data-form-id="${formId}"></script>`
+    const frontendUrl = window.location.origin
+    const embedCode = `<!-- OpenDesk Form Embed -->
+<script src="${apiUrl}/embed.js" data-form-id="${formId}"></script>
+<noscript>
+  <iframe src="${frontendUrl}/embed/form/${formId}" width="100%" height="500" frameborder="0"></iframe>
+</noscript>`
     navigator.clipboard.writeText(embedCode)
     setCopiedId(formId)
     setTimeout(() => setCopiedId(""), 2000)
@@ -72,8 +76,8 @@ export default function FormsPage() {
   if (loading) return <div className="p-6">Loading...</div>
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+    <div className="mx-auto max-w-4xl p-6">
+      <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Forms</h1>
         <Link href="/dashboard/forms/new">
           <Button>New Form</Button>
@@ -81,20 +85,24 @@ export default function FormsPage() {
       </div>
 
       {forms.length === 0 && (
-        <p className="text-muted-foreground">No forms yet. Create one to start capturing leads.</p>
+        <p className="text-muted-foreground">
+          No forms yet. Create one to start capturing leads.
+        </p>
       )}
 
       <div className="space-y-3">
         {forms.map((form) => (
           <Card key={form.id}>
             <CardContent className="p-4">
-              <div className="flex items-start justify-between mb-3">
+              <div className="mb-3 flex items-start justify-between">
                 <div>
                   <p className="font-medium">{form.name}</p>
                   {form.description && (
-                    <p className="text-xs text-muted-foreground">{form.description}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {form.description}
+                    </p>
                   )}
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {form._count.leads} leads received
                   </p>
                 </div>
@@ -103,9 +111,11 @@ export default function FormsPage() {
                 </Badge>
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex flex-wrap items-center gap-2">
                 <Link href={`/dashboard/forms/${form.id}`}>
-                  <Button variant="outline" size="sm">Edit</Button>
+                  <Button variant="outline" size="sm">
+                    Edit
+                  </Button>
                 </Link>
                 <Button
                   variant="outline"
@@ -115,7 +125,11 @@ export default function FormsPage() {
                   {form.isPublished ? "Unpublish" : "Publish"}
                 </Button>
                 {form.isPublished && (
-                  <Button variant="outline" size="sm" onClick={() => copyEmbedCode(form.id)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyEmbedCode(form.id)}
+                  >
                     {copiedId === form.id ? "Copied!" : "Copy Embed Code"}
                   </Button>
                 )}
