@@ -13,7 +13,19 @@ async function bootstrap(): Promise<void> {
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
 
-  // CORS: localhost + deployed frontend dono allow karo
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/public/') || req.path === '/embed.js') {
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.header('Access-Control-Allow-Headers', 'Content-Type');
+      if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+      }
+    }
+    next();
+  });
+
+  // CORS: localhost + deployed frontend dono allow karo (baaki saare routes ke liye)
   const frontendUrl = (configService.get('FRONTEND_URL') as string) || '';
 
   const allowedOrigins = ['http://localhost:3000'];
