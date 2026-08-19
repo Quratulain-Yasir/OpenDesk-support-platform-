@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
-import { json, urlencoded } from 'express';
+import { json, urlencoded, Request, Response, NextFunction } from 'express';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
@@ -13,7 +13,8 @@ async function bootstrap(): Promise<void> {
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
 
-  app.use((req, res, next) => {
+  // Embed routes ke liye manual CORS, whitelist se pehle chalega
+  app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.path.startsWith('/public/') || req.path === '/embed.js') {
       res.header('Access-Control-Allow-Origin', '*');
       res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -25,7 +26,6 @@ async function bootstrap(): Promise<void> {
     next();
   });
 
-  // CORS: localhost + deployed frontend dono allow karo (baaki saare routes ke liye)
   const frontendUrl = (configService.get('FRONTEND_URL') as string) || '';
 
   const allowedOrigins = ['http://localhost:3000'];
