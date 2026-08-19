@@ -36,6 +36,7 @@ model Workspace {
   tickets        Ticket[]
   savedResponses SavedResponse[]
   activities     Activity[]
+  forms          Form[]
 
   @@map("workspaces")
 }
@@ -160,4 +161,58 @@ model Invite {
   createdAt   DateTime  @default(now()) @map("created_at")
 
   @@map("invites")
+}
+
+enum FieldType {
+  TEXT
+  EMAIL
+  PHONE
+  TEXTAREA
+  DROPDOWN
+  CHECKBOX
+}
+
+model Form {
+  id          String   @id @default(cuid())
+  workspaceId String   @map("workspace_id")
+  name        String
+  description String?
+  isPublished Boolean  @default(false) @map("is_published")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  workspace Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  fields    FormField[]
+  leads     Lead[]
+
+  @@index([workspaceId])
+  @@map("forms")
+}
+
+model FormField {
+  id        String    @id @default(cuid())
+  formId    String    @map("form_id")
+  label     String
+  type      FieldType @default(TEXT)
+  required  Boolean   @default(false)
+  options   String[]  // Sirf DROPDOWN type ke liye use hoga
+  order     Int       @default(0)
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  form Form @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId])
+  @@map("form_fields")
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  formId    String   @map("form_id")
+  data      Json
+  createdAt DateTime @default(now()) @map("created_at")
+
+  form Form @relation(fields: [formId], references: [id], onDelete: Cascade)
+
+  @@index([formId])
+  @@map("leads")
 }

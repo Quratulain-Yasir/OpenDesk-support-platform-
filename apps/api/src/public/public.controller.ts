@@ -2,6 +2,8 @@ import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MessagesService } from '../messages/messages.service';
 import { CreateMessageDto } from '../messages/dto/create-message.dto';
+import { FormsService } from '../forms/forms.service';
+import { SubmitLeadDto } from '../forms/dto/submit-lead.dto';
 import { TicketStatus, TicketPriority } from '@prisma/client';
 
 @Controller('public')
@@ -9,9 +11,9 @@ export class PublicController {
   constructor(
     private prisma: PrismaService,
     private messagesService: MessagesService,
+    private formsService: FormsService, // NEW
   ) {}
 
-  // Customer creates ticket without login
   @Post('tickets')
   async createTicket(
     @Body()
@@ -21,12 +23,11 @@ export class PublicController {
       customerEmail: string;
       customerName?: string;
       priority?: string;
-      workspaceId?: string; // ← YEH ADD KIYA
+      workspaceId?: string;
     },
   ) {
     let workspaceId = body.workspaceId;
 
-    // Agar frontend se workspaceId nahi aayi → fallback pehli workspace
     if (!workspaceId) {
       const workspace = await this.prisma.workspace.findFirst();
       if (!workspace) {
@@ -34,7 +35,6 @@ export class PublicController {
       }
       workspaceId = workspace.id;
     } else {
-      // Verify ke ye workspace exist karti hai
       const workspace = await this.prisma.workspace.findUnique({
         where: { id: body.workspaceId },
       });
@@ -46,7 +46,7 @@ export class PublicController {
 
     const ticket = await this.prisma.ticket.create({
       data: {
-        workspaceId: workspaceId, // ← AB SELECTED WORKSPACE USE HOGI
+        workspaceId,
         subject: body.subject,
         description: body.description,
         customerEmail: body.customerEmail,
@@ -59,7 +59,6 @@ export class PublicController {
     return ticket;
   }
 
-  // Customer views ticket via public token — NO login needed
   @Get('tickets/:token')
   async getTicket(@Param('token') token: string) {
     const ticket = await this.prisma.ticket.findUnique({
@@ -77,7 +76,6 @@ export class PublicController {
     return ticket;
   }
 
-  // Customer replies via public token — NO login needed
   @Post('tickets/:token/messages')
   async addMessage(
     @Param('token') token: string,
@@ -95,5 +93,20 @@ export class PublicController {
       undefined,
       ticket.customerName || 'Customer',
     );
+  }
+
+  // NEW — embed script yeh call karega form ka structure fetch karne ke liye 
+  @Get('forms/:formId')
+  async getPublicForm(@Param('formId') formId: string) {
+    return this.formsService.findPublicForm(formId);
+  }
+
+  // NEW — jab visitor form submit kare, yeh endpoint hit hoga
+  @Post('forms/:formId/submit')
+  async submitFormLead(
+    @Param('formId') formId: string,
+    @Body() dto: SubmitLeadDto,
+  ) {
+    return this.formsService.submitLead(formId, dto.data);
   }
 }

@@ -11,6 +11,7 @@ import { SavedResponsesModule } from './saved-responses/saved-responses.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { TeamModule } from './team/team.module';
 import { MailModule } from './mail/mail.module';
+import { FormsModule } from './forms/forms.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { MailModule } from './mail/mail.module';
     AnalyticsModule,
     TeamModule,
     MailModule,
+    FormsModule,
   ],
 })
 export class AppModule {}
