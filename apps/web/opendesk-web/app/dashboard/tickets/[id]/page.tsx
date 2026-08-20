@@ -83,6 +83,8 @@ export default function TicketDetailPage() {
   const [sending, setSending] = useState(false)
   const [savedResponses, setSavedResponses] = useState<SavedResponse[]>([])
   const [selectedResponseId, setSelectedResponseId] = useState("")
+  const [aiLoading, setAiLoading] = useState(false)
+
 
   const loadTicket = useCallback(async (wsId: string) => {
     try {
@@ -133,6 +135,22 @@ export default function TicketDetailPage() {
       alert("Failed to send")
     } finally {
       setSending(false)
+    }
+  }
+
+  async function handleAiSuggest() {
+    if (!workspaceId) return
+    setAiLoading(true)
+    try {
+      const res = await api(`/workspaces/${workspaceId}/tickets/${ticketId}/ai-suggest`, {
+        method: "POST",
+      })
+      setMessage(res.suggestion)
+      setActiveTab("reply")
+    } catch (err: any) {
+      alert(err.message || "Failed to generate AI suggestion")
+    } finally {
+      setAiLoading(false)
     }
   }
 
@@ -234,6 +252,18 @@ export default function TicketDetailPage() {
               </div>
             </CardHeader>
             <CardContent>
+                            <div className="mb-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAiSuggest}
+                  disabled={aiLoading}
+                  className="gap-2"
+                >
+                  {aiLoading ? "Generating..." : "✨ AI Suggest"}
+                </Button>
+              </div>
               <form onSubmit={handleSend} className="space-y-3">
                 {/* Saved Response Picker */}
                 {savedResponses.length > 0 && (
@@ -243,7 +273,7 @@ export default function TicketDetailPage() {
                       onValueChange={(val) => {
                         const safeVal = val || ""
                         if (safeVal === "none") {
-                          setSelectedResponseId("none")  // ← "none" rakho taake dropdown mein dikhe
+                          setSelectedResponseId("none")  
                           setMessage("")
                           return
                         }

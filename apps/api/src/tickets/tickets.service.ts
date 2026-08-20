@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ActivityService } from '../activity/activity.service';
+import { AiService } from '../ai/ai.service'; // NEW
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { TicketStatus } from '@prisma/client';
@@ -14,10 +15,10 @@ export class TicketsService {
   constructor(
     private prisma: PrismaService,
     private activity: ActivityService,
+    private aiService: AiService, // NEW
   ) {}
 
   async create(workspaceId: string | null, dto: CreateTicketDto) {
-    // Pehle DTO mein workspaceId check karo, warna param se lo, warna first workspace
     let targetWorkspaceId = dto.workspaceId || workspaceId;
 
     if (!targetWorkspaceId) {
@@ -161,5 +162,34 @@ export class TicketsService {
     }
 
     return ticket;
+  }
+
+  // NEW — AI Suggest
+  async suggestReply(workspaceId: string, ticketId: string) {
+    const ticket = await this.prisma.ticket.findFirst({
+      where: { id: ticketId, workspaceId },
+      include: {
+        messages: {
+          where: { isInternal: false }, // Internal notes AI ko nahi dikhani chahiye — sirf customer-facing conversation
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+    });
+
+    if (!ticket) throw new NotFoundException('Ticket not found');
+
+    // Message.authorId null hai matlab customer ne bheja, warna team member ne
+    const messagesForAi = ticket.messages.map((m) => ({
+      content: m.content,
+      isCustomer: !m.authorId,
+    }));
+
+    const suggestion = await this.aiService.suggestReply(
+      ticket.subject,
+      ticket.description,
+      messagesForAi,
+    );
+
+    return { suggestion };
   }
 }

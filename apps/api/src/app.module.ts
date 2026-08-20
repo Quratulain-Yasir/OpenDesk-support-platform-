@@ -13,7 +13,7 @@ import { TeamModule } from './team/team.module';
 import { MailModule } from './mail/mail.module';
 import { FormsModule } from './forms/forms.module';
 import { LeadsModule } from './leads/leads.module';  
-
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -31,6 +31,7 @@ import { LeadsModule } from './leads/leads.module';
     MailModule,
     FormsModule,
     LeadsModule, 
+    AiModule,
   ],
 })
 export class AppModule {}

@@ -61,4 +61,13 @@ export class TicketsController {
   ) {
     return this.ticketsService.update(workspaceId, id, dto, user.userId);
   }
+
+  // NEW — AI Suggest
+  @Post(':id/ai-suggest')
+  aiSuggest(
+    @Param('workspaceId') workspaceId: string,
+    @Param('id') id: string,
+  ) {
+    return this.ticketsService.suggestReply(workspaceId, id);
+  }
 }
