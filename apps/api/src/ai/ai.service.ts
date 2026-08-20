@@ -41,8 +41,9 @@ ${conversationText || '(No replies yet)'}
 
 Write ONLY the reply text — no greeting like "Here's a draft" and no explanation. Just the reply itself, ready to send to the customer.`;
 
-    // Gemini REST API endpoint — gemini-2.0-flash current free-tier model hai
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.apiKey}`;
+    const model =
+      this.configService.get<string>('GEMINI_MODEL') || 'gemini-3.6-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.apiKey}`;
 
     const response = await fetch(url, {
       method: 'POST',
