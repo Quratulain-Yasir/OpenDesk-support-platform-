@@ -81,30 +81,29 @@ export function LeadDrawer({ leadId, workspaceId, open, onOpenChange, onStatusCh
     }
   }, [leadId, workspaceId])
 
-  // Jab drawer khule ya leadId badle, fresh data lao
   useEffect(() => {
     if (open && leadId) {
       loadLead()
     }
   }, [open, leadId, loadLead])
 
-async function handleStatusChange(newStatus: string | null) {
-  if (!newStatus) return
-  if (!lead || !workspaceId) return
-  const prevStatus = lead.status
-  setLead({ ...lead, status: newStatus })
-  try {
-    await api(`/workspaces/${workspaceId}/leads/${lead.id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ status: newStatus }),
-    })
-    onStatusChanged?.(lead.id, newStatus)
-    loadLead()
-  } catch {
-    alert("Failed to update status")
-    setLead({ ...lead, status: prevStatus })
+  async function handleStatusChange(newStatus: string | null) {
+    if (!newStatus) return
+    if (!lead || !workspaceId) return
+    const prevStatus = lead.status
+    setLead({ ...lead, status: newStatus })
+    try {
+      await api(`/workspaces/${workspaceId}/leads/${lead.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: newStatus }),
+      })
+      onStatusChanged?.(lead.id, newStatus)
+      loadLead()
+    } catch {
+      alert("Failed to update status")
+      setLead({ ...lead, status: prevStatus })
+    }
   }
-}
 
   async function handleSendComment(e: React.FormEvent) {
     e.preventDefault()
@@ -126,9 +125,10 @@ async function handleStatusChange(newStatus: string | null) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+      {/* ─── FIX: bg-card + border-l + p-6 ─── */}
+      <SheetContent className="w-full sm:max-w-lg overflow-y-auto bg-card border-l p-6">
         {loading || !lead ? (
-          <div className="p-4 text-sm text-muted-foreground">Loading...</div>
+          <div className="text-sm text-muted-foreground">Loading...</div>
         ) : (
           <div className="space-y-6">
             <SheetHeader>
