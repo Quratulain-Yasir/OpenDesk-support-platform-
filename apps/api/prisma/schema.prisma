@@ -167,6 +167,17 @@ model Invite {
   @@map("invites")
 }
 
+model PasswordReset {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  token     String    @unique @default(cuid())
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("password_resets")
+}
+
 enum FieldType {
   TEXT
   EMAIL

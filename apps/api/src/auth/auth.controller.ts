@@ -15,6 +15,8 @@ import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { SignupDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto'; // NEW
+import { ResetPasswordDto } from './dto/reset-password.dto'; // NEW
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { GetUser } from './decorators/get-user.decorator';
 
@@ -52,6 +54,20 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   async refresh(@Res({ passthrough: true }) res: Response) {
     return { message: 'Refresh endpoint ready' };
+  }
+
+  // NEW
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
+  }
+
+  // NEW
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 
   @Get('me')
