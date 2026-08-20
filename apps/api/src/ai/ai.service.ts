@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 
 interface MessageForAi {
   content: string;
-  isCustomer: boolean; 
+  isCustomer: boolean;
 }
 
 @Injectable()
@@ -18,16 +18,19 @@ export class AiService {
     }
   }
 
-  async suggestReply(subject: string, description: string, messages: MessageForAi[]): Promise<string> {
+  async suggestReply(
+    subject: string,
+    description: string,
+    messages: MessageForAi[],
+  ): Promise<string> {
     if (!this.apiKey) {
       throw new Error('AI service not configured');
     }
 
-    
     const conversationText = messages
       .map((m) => `${m.isCustomer ? 'Customer' : 'Agent'}: ${m.content}`)
       .join('\n');
- 
+
     const prompt = `You are a helpful customer support agent. Based on the ticket below, write a professional, concise reply to the customer.
 
 Ticket Subject: ${subject}
@@ -38,8 +41,8 @@ ${conversationText || '(No replies yet)'}
 
 Write ONLY the reply text — no greeting like "Here's a draft" and no explanation. Just the reply itself, ready to send to the customer.`;
 
-  
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`;
+    // Gemini REST API endpoint — gemini-2.0-flash current free-tier model hai
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${this.apiKey}`;
 
     const response = await fetch(url, {
       method: 'POST',
@@ -57,7 +60,6 @@ Write ONLY the reply text — no greeting like "Here's a draft" and no explanati
 
     const data = await response.json();
 
- 
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!text) {
